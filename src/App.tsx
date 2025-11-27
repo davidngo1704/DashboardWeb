@@ -4,7 +4,6 @@ import { Route } from 'react-router-dom'
 import AppTopbar from './AppTopbar';
 import AppBreadcrumb from "./AppBreadcrumb";
 import AppInlineMenu from './AppInlineMenu';
-import AppFooter from './AppFooter';
 import AppMenu from './AppMenu';
 import AppConfig from './AppConfig';
 import AppRightMenu from './AppRightMenu';
@@ -46,7 +45,6 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import './App.scss';
-import httpClient from './utils/htttpClient';
 declare let window: any;
 const ENV = window._env_;
 export const RTLContext = React.createContext(false);
@@ -242,8 +240,7 @@ const App = () => {
     useEffect(() => {
         onColorModeChange(colorMode);
         (async () =>{
-            const { data: { value: { action: { menu: { valueObj } } } } } = await httpClient.getMethod(ENV.API_URL);
-            setMenu(valueObj);
+            setMenu(menu1);
         })();
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
     const onMenuThemeChange = (theme: string) => {
@@ -547,8 +544,6 @@ const App = () => {
                         <Route path="/pages/timeline" component={TimelineDemo} />
 
                     </div>
-
-                    <AppFooter colorMode={colorMode} />
 
                 </div>
 

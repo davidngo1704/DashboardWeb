@@ -3,7 +3,6 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Dropdown } from 'primereact/dropdown';
-import httpClient from '../utils/htttpClient';
 declare let window: any;
 const ENV = window._env_;
 export const FormLayoutDemo = () => {
@@ -13,10 +12,7 @@ export const FormLayoutDemo = () => {
     const [captiens, setCaptiens] = React.useState<any>();
     React.useEffect(() => {
         (async () =>{
-            const { data: { value: { value } } } = await httpClient.postMethod(url, {
-                Type: "GetCapTienAo"
-            });
-            setCaptiens(value.ArrayValue);
+         
         })();
     }, []);
     return (
@@ -36,22 +32,12 @@ export const FormLayoutDemo = () => {
                         </div>
                         <Button label="Mua"
                             onClick={async () => {
-                                const { data } = await httpClient.postMethod(url, {
-                                    input1,
-                                    dropdownItem,
-                                    Type: "Buy"
-                                });
-                                alert(JSON.stringify(data.value.value));
+                          
                             }}
                         ></Button>
                         <Button label="Bán"
                             onClick={async () => {
-                                const { data } = await httpClient.postMethod(url, {
-                                    input1,
-                                    dropdownItem,
-                                    Type: "Sell"
-                                });
-                                alert(JSON.stringify(data.value.value));
+                         
                             }}
                         ></Button>
                     </div>

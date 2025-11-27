@@ -6,7 +6,6 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { CSSTransition } from 'react-transition-group';
 import { RTLContext } from './App';
-import httpClient from './utils/htttpClient';
 declare let window: any;
 const ENV = window._env_;
 const AppTopbar = (props: any) => {
@@ -36,19 +35,7 @@ const AppTopbar = (props: any) => {
     const [model, setModel] = React.useState<any>();
     React.useEffect(() => {
         (async () => {
-            const { data: { value: { action: { menu: { value } } } } } = await httpClient.getMethod(ENV.API_URL);
-            var dataArray: any[] = [];
-            dataArray.push(value);
-            for(let item of value.items) {
-                for(let subItem of item) {
-                    for(let subSubItem of subItem.items) {
-                        subSubItem.command = () => {
-                            history.push(subSubItem.commandpush);
-                        }
-                    }
-                }
-            }
-            setModel(dataArray);
+            setModel(model1);
         })();
     }, []);
     const model1 = [

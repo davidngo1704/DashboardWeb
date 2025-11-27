@@ -12,7 +12,6 @@ import { Timeline } from 'primereact/timeline';
 import { InputText } from 'primereact/inputtext';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { RTLContext } from '../App';
-import httpClient from '../utils/htttpClient';
 const overviewChartData1 = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'],
     datasets: [
@@ -317,11 +316,7 @@ export const Dashboard = (props: any) => {
     const [captiens, setCaptiens] = React.useState<any[]>([]);
     React.useEffect(() => {
         (async () => {
-            const { data: { value: { value } } } = await httpClient.postMethod(url, {
-                Type: "GetCapTienAo"
-            });
-            setCaptiens(value.ArrayValue);
-            console.log(value.ArrayValue);
+          
         })();
     }, []);
     const renderFinanceSection = () => {
