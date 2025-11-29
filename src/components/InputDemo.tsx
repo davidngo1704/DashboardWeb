@@ -157,36 +157,7 @@ export const InputDemo = () => {
         );
     };
 
-    const phongTro: any = () => {
-
-        return (
-            <>
-                <h5>Quản lý phòng trọ</h5>
-                <div className="p-grid p-formgrid">
-                    <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
-                        <InputText type="text" placeholder="Phòng 1"></InputText>
-                    </div>
-
-                    <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
-                        <InputText type="text" placeholder="Phòng 2"></InputText>
-                    </div>
-
-                    <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
-                        <InputText type="text" placeholder="Phòng 3"></InputText>
-                    </div>
-                </div>
-                <div className="p-col-12">
-                    <div className="card">
-                        <Button label="" className="p-mr-2 p-mb-2">Gửi</Button>
-                        <h4></h4>
-                        <h4></h4>
-                        <h4></h4>
-
-                    </div>
-                </div>
-            </>
-        );
-    };
+    
 
   
 
@@ -195,7 +166,7 @@ export const InputDemo = () => {
             <div className="p-col-12 p-md-6">
                 <div className="card">
 
-                    {phongTro()}
+                
 
                     {cauHinhAws()}
                     <h5>Icons</h5>

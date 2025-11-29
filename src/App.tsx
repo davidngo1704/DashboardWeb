@@ -47,20 +47,22 @@ import 'primeflex/primeflex.css';
 import './App.scss';
 export const RTLContext = React.createContext(false);
 const App = () => {
-
+    const getThemeByTime = (date: Date = new Date()): "light" | "dark" => (date.getHours() >= 5 && date.getHours() < 21) ? "light" : "dark";
+      
+      
     const [menuMode, setMenuMode] = useState('static');
     const [inlineMenuPosition, setInlineMenuPosition] = useState('bottom');
     const [desktopMenuActive, setDesktopMenuActive] = useState(true);
     const [mobileMenuActive, setMobileMenuActive] = useState(false);
     const [activeTopbarItem, setActiveTopbarItem] = useState(null);
-    const [colorMode, setColorMode] = useState('dark');
+    const [colorMode, setColorMode] = useState(getThemeByTime());
     const [rightMenuActive, setRightMenuActive] = useState(false);
     const [menuActive, setMenuActive] = useState(false);
     const [inputStyle, setInputStyle] = useState('filled');
     const [isRTL, setRTL] = useState<boolean>(false);
     const [ripple, setRipple] = useState(true);
     const [mobileTopbarActive, setMobileTopbarActive] = useState(false);
-    const [menuTheme, setMenuTheme] = useState('dark');
+    const [menuTheme, setMenuTheme] = useState(getThemeByTime());
     const [topbarTheme, setTopbarTheme] = useState('blue');
     const [theme, setTheme] = useState('indigo');
     const [isInputBackgroundChanged, setIsInputBackgroundChanged] = useState(false);
@@ -241,7 +243,7 @@ const App = () => {
             setMenu(menu1);
         })();
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
-    const onMenuThemeChange = (theme: string) => {
+    const onMenuThemeChange = (theme: any) => {
         setMenuTheme(theme)
     }
     const onTopbarThemeChange = (theme: string) => {
@@ -263,7 +265,7 @@ const App = () => {
         const themeHref = 'assets/theme/' + theme + '/theme-' + colorMode + '.css';
         replaceLink(themeLink, themeHref);
     }
-    const onColorModeChange = (mode: string) => {
+    const onColorModeChange = (mode: any) => {
         setColorMode(mode);
         setIsInputBackgroundChanged(true);
 

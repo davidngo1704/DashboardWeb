@@ -12,6 +12,7 @@ import { Timeline } from 'primereact/timeline';
 import { InputText } from 'primereact/inputtext';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { RTLContext } from '../App';
+import httpClient from "../utils/htttpClient";
 const overviewChartData1 = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'],
     datasets: [
@@ -168,8 +169,6 @@ const getOrdersOptions = () => {
     }
 }
 let ordersOptions = getOrdersOptions();
-declare let window: any;
-const ENV = window._env_;
 export const Dashboard = (props: any) => {
     const [products, setProducts] = useState<any>(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -191,7 +190,14 @@ export const Dashboard = (props: any) => {
         const productService = new ProductService();
         productService.getProducts().then(data => setProducts(data));
         ordersOptions = getOrdersOptions();
-        setOverviewColors()
+        setOverviewColors();
+
+        (async () => {
+            const { data: { data } } = await httpClient.getMethod("https://rtafvndlc6mc6g5apdwzdjduma0sjicv.lambda-url.ap-southeast-2.on.aws/?id=89ce40e7-73e5-4f35-a3e4-22cf836e19ea");
+            console.log(data);
+    
+        })();
+
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const getOverviewColors = () => {
         const isLight = props.colorMode === 'light';
@@ -313,11 +319,7 @@ export const Dashboard = (props: any) => {
     };
 
     const [captiens, setCaptiens] = React.useState<any[]>([]);
-    React.useEffect(() => {
-        (async () => {
-          
-        })();
-    }, []);
+    
     const renderFinanceSection = () => {
         return captiens.map(item => {
             return <React.Fragment>
@@ -345,6 +347,38 @@ export const Dashboard = (props: any) => {
             </React.Fragment>
         })
     }
+
+
+    const phongTro: any = () => {
+        return (
+            <>
+                <h5>Quản lý phòng trọ</h5>
+                <div className="p-grid p-formgrid">
+                    <div className="p-col-12 p-mb-4 p-lg-4 p-mb-lg-4">
+                        <InputText type="text" placeholder="Phòng 1"></InputText>
+                    </div>
+
+                    <div className="p-col-12 p-mb-4 p-lg-4 p-mb-lg-4">
+                        <InputText type="text" placeholder="Phòng 2"></InputText>
+                    </div>
+
+                    <div className="p-col-12 p-mb-4 p-lg-4 p-mb-lg-4">
+                        <InputText type="text" placeholder="Phòng 3"></InputText>
+                    </div>
+                </div>
+                <div className="p-col-12">
+                    <div className="card">
+                        <Button label="" className="p-mr-2 p-mb-2">Gửi</Button>
+                        <h4></h4>
+                        <h4></h4>
+                        <h4></h4>
+
+                    </div>
+                </div>
+            </>
+        );
+    };
+    
     return (
         <div className="p-grid dashboard">
          
@@ -464,6 +498,10 @@ export const Dashboard = (props: any) => {
                     </div>
                 </div>
             </div>
+            <div className="p-col-12 p-lg-12">
+            {phongTro()}
+            </div>
+        
 
             {renderFinanceSection()}
 
