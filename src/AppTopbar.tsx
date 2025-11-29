@@ -36,7 +36,10 @@ const AppTopbar = (props: any) => {
             setModel(model1);
         })();
     }, []);
-    const model1 = [
+    const model1: any = [
+     
+    ];
+    const model2 = [
         {
             label: 'UI KIT',
             items: [
