@@ -45,8 +45,6 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import './App.scss';
-declare let window: any;
-const ENV = window._env_;
 export const RTLContext = React.createContext(false);
 const App = () => {
 
@@ -55,14 +53,14 @@ const App = () => {
     const [desktopMenuActive, setDesktopMenuActive] = useState(true);
     const [mobileMenuActive, setMobileMenuActive] = useState(false);
     const [activeTopbarItem, setActiveTopbarItem] = useState(null);
-    const [colorMode, setColorMode] = useState('light');
+    const [colorMode, setColorMode] = useState('dark');
     const [rightMenuActive, setRightMenuActive] = useState(false);
     const [menuActive, setMenuActive] = useState(false);
     const [inputStyle, setInputStyle] = useState('filled');
     const [isRTL, setRTL] = useState<boolean>(false);
     const [ripple, setRipple] = useState(true);
     const [mobileTopbarActive, setMobileTopbarActive] = useState(false);
-    const [menuTheme, setMenuTheme] = useState('light');
+    const [menuTheme, setMenuTheme] = useState('dark');
     const [topbarTheme, setTopbarTheme] = useState('blue');
     const [theme, setTheme] = useState('indigo');
     const [isInputBackgroundChanged, setIsInputBackgroundChanged] = useState(false);
@@ -253,7 +251,7 @@ const App = () => {
         const appLogoLink = (document.getElementById('app-logo') as HTMLInputElement);
 
         if (topbarTheme === 'white' || topbarTheme === 'yellow' || topbarTheme === 'amber' || topbarTheme === 'orange' || topbarTheme === 'lime') {
-            appLogoLink.src = 'assets/layout/images/logo-dark.svg';
+            appLogoLink.src = 'assets/layout/images/logo-light.svg';
         }
         else {
             appLogoLink.src = 'assets/layout/images/logo-light.svg';
@@ -283,7 +281,6 @@ const App = () => {
         } else {
             setMenuTheme('light');
             setTopbarTheme('blue');
-
         }
 
         const layoutLink = document.getElementById('layout-css');

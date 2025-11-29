@@ -8,7 +8,6 @@ const ENV = window._env_;
 export const FormLayoutDemo = () => {
     const [dropdownItem, setDropdownItem] = useState(null);
     const [input1, setInput1] = React.useState<any>(1000);
-    const url = ENV.API_URL;
     const [captiens, setCaptiens] = React.useState<any>();
     React.useEffect(() => {
         (async () =>{

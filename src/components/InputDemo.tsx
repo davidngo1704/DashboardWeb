@@ -135,23 +135,69 @@ export const InputDemo = () => {
         return 'Select Countries';
     };
 
+    const cauHinhAws: any = () => {
+
+        return (
+            <>
+                <h5>Tạo cấu hình Aws</h5>
+                <div className="p-grid p-formgrid">
+                    <div className="p-col-12 p-mb-12 p-lg-12 p-mb-lg-12">
+                        <InputText type="text" placeholder="Data"></InputText>
+                    </div>
+                </div>
+                <div className="p-col-12">
+                    <div className="card">
+                        <Button label="" className="p-mr-2 p-mb-2">Gửi</Button>
+                        <h4></h4>
+                    
+
+                    </div>
+                </div>
+            </>
+        );
+    };
+
+    const phongTro: any = () => {
+
+        return (
+            <>
+                <h5>Quản lý phòng trọ</h5>
+                <div className="p-grid p-formgrid">
+                    <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
+                        <InputText type="text" placeholder="Phòng 1"></InputText>
+                    </div>
+
+                    <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
+                        <InputText type="text" placeholder="Phòng 2"></InputText>
+                    </div>
+
+                    <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
+                        <InputText type="text" placeholder="Phòng 3"></InputText>
+                    </div>
+                </div>
+                <div className="p-col-12">
+                    <div className="card">
+                        <Button label="" className="p-mr-2 p-mb-2">Gửi</Button>
+                        <h4></h4>
+                        <h4></h4>
+                        <h4></h4>
+
+                    </div>
+                </div>
+            </>
+        );
+    };
+
+  
+
     return (
         <div className="p-grid p-fluid input-demo">
             <div className="p-col-12 p-md-6">
                 <div className="card">
-                    <h5>InputText</h5>
-                    <div className="p-grid p-formgrid">
-                        <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
-                            <InputText type="text" placeholder="Default"></InputText>
-                        </div>
-                        <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
-                            <InputText type="text" placeholder="Disabled" disabled></InputText>
-                        </div>
-                        <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
-                            <InputText type="text" placeholder="Invalid" className="p-error" />
-                        </div>
-                    </div>
 
+                    {phongTro()}
+
+                    {cauHinhAws()}
                     <h5>Icons</h5>
                     <div className="p-grid p-formgrid">
                         <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">

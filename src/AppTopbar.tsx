@@ -6,8 +6,6 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { CSSTransition } from 'react-transition-group';
 import { RTLContext } from './App';
-declare let window: any;
-const ENV = window._env_;
 const AppTopbar = (props: any) => {
 
     const isRTL = useContext(RTLContext);
@@ -131,6 +129,7 @@ const AppTopbar = (props: any) => {
             <div className="layout-topbar-left">
                 <button type="button" style={{ cursor: 'pointer' }} className="layout-topbar-logo p-link" onClick={() => history.push('/')}>
                     <img id="app-logo" src="assets/layout/images/logo-light.svg" alt="ultima-layout" style={{ height: '2.25rem' }} />
+                    {" "}Thành Đại
                 </button>
                 <button type="button" className="layout-menu-button p-shadow-6 p-link" onClick={props.onMenuButtonClick}>
                     <i className="pi pi-chevron-right"></i>
