@@ -188,23 +188,7 @@ export const Dashboard = (props: any) => {
     const toast = useRef<any>(null);
     const isRTL = useContext(RTLContext)
     const chart1 = useRef<any>(null);
-    useEffect(() => {
-        const productService = new ProductService();
-        productService.getProducts().then(data => setProducts(data));
-        ordersOptions = getOrdersOptions();
-        setOverviewColors();
 
-        // tải sẵn dữ liệu phòng trọ để sau này tính tiền nhanh hơn
-        (async () => {
-            try {
-                const { data: { data } } = await httpClient.getMethod(ELECTRICITY_API_URL);
-                setRoomData(data);
-            } catch (error) {
-                console.error("Không thể tải dữ liệu phòng trọ", error);
-            }
-        })();
-
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const getOverviewColors = () => {
         const isLight = props.colorMode === 'light';
         return {
@@ -250,7 +234,7 @@ export const Dashboard = (props: any) => {
         '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😇', '😉', '😊', '🙂', '🙃', '😋', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '🤪', '😜', '😝', '😛',
         '🤑', '😎', '🤓', '🧐', '🤠', '🥳', '🤗', '🤡', '😏', '😶', '😐', '😑', '😒', '🙄', '🤨', '🤔', '🤫', '🤭', '🤥', '😳', '😞', '😟', '😠', '😡', '🤬', '😔',
         '😟', '😠', '😡', '🤬', '😔', '😕', '🙁', '😬', '🥺', '😣', '😖', '😫', '😩', '🥱', '😤', '😮', '😱', '😨', '😰', '😯', '😦', '😧', '😢', '😥', '😪', '🤤'
-        ];
+    ];
     const onChatKeydown = (event: any) => {
         if (event.key === 'Enter') {
             let message = event.target.value;
@@ -324,7 +308,6 @@ export const Dashboard = (props: any) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     };
 
-    const [captiens, setCaptiens] = React.useState<any[]>([]);
 
     // ---------------------- Quản lý phòng trọ ----------------------
     type RoomApiData = {
@@ -445,11 +428,11 @@ export const Dashboard = (props: any) => {
             // Chuẩn bị dữ liệu để gửi lên API
             const updatedData = currentRoomData.map((room: RoomApiData) => {
                 const currentInput = Number(electricityInputs[room.code]);
-                
+
                 // Tính toán tháng và năm mới
                 let newMonth = room.month + 1;
                 let newYear = room.year;
-                
+
                 if (newMonth > 12) {
                     newMonth = 1;
                     newYear = newYear + 1;
@@ -473,7 +456,7 @@ export const Dashboard = (props: any) => {
 
             // Lấy dữ liệu đầy đủ từ API response để có age, id, name
             const { data: fullData } = await httpClient.getMethod(ELECTRICITY_API_URL);
-            
+
             const requestBody = {
                 age: fullData.age || 1,
                 data: updatedData,
@@ -506,7 +489,74 @@ export const Dashboard = (props: any) => {
             setIsSaving(false);
         }
     };
+    const [captiens, setCaptiens] = React.useState<any[]>([]);
+
+    useEffect(() => {
+        const productService = new ProductService();
+        productService.getProducts().then(data => setProducts(data));
+        ordersOptions = getOrdersOptions();
+        setOverviewColors();
+
     
+
+        (async () => {
+            try {
+                setCaptiens([
+                    {
+                        name: 'USD',
+                        code: 'USD',
+                    },
+                    {
+                        name: 'EUR',
+                        code: 'EUR',
+                    },
+                    {
+                        name: 'GBP',
+                        code: 'GBP',
+                    },
+                    {
+                        name: 'GBP',
+                        code: 'GBP',
+                    },
+                    {
+                        name: 'USD',
+                        code: 'USD',
+                    },
+                    {
+                        name: 'EUR',
+                        code: 'EUR',
+                    },
+                    {
+                        name: 'GBP',
+                        code: 'GBP',
+                    },
+                    {
+                        name: 'GBP',
+                        code: 'GBP',
+                    },
+                    {
+                        name: 'USD',
+                        code: 'USD',
+                    },
+                    {
+                        name: 'EUR',
+                        code: 'EUR',
+                    },
+                    {
+                        name: 'GBP',
+                        code: 'GBP',
+                    },
+                    {
+                        name: 'GBP',
+                        code: 'GBP',
+                    },
+                ]);
+            } catch (error) {
+            }
+        })();
+
+
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const renderFinanceSection = () => {
         return captiens.map(item => {
             return <React.Fragment>
@@ -570,6 +620,28 @@ export const Dashboard = (props: any) => {
                 </div>
                 <div className="p-col-12">
                     <div className="card">
+                    <Button
+                            label={"Khởi động"}
+                            className="p-mr-2 p-mb-2"
+                            onClick={() => {
+                                // tải sẵn dữ liệu phòng trọ để sau này tính tiền nhanh hơn
+                                (async () => {
+                                    try {
+                                        const { data: { data } } = await httpClient.getMethod(ELECTRICITY_API_URL);
+                                        setRoomData(data);
+
+                                        toast.current?.show({
+                                            severity: 'success',
+                                            summary: 'Thành công',
+                                            detail: 'Khởi động thành công',
+                                            life: 3000
+                                        });
+                                    } catch (error) {
+                                        console.error("Không thể tải dữ liệu phòng trọ", error);
+                                    }
+                                })();
+                            }}
+                        />
                         <Button
                             label={isCalculating ? "Đang xử lý..." : "Tính toán"}
                             className="p-mr-2 p-mb-2"
@@ -596,307 +668,307 @@ export const Dashboard = (props: any) => {
             </>
         );
     };
-    
+
     return (
         <>
-        <div className="p-grid dashboard">
-         
+            <div className="p-grid dashboard">
 
-            <div className="p-col-12 p-lg-3">
-                <div className="card height-100">
-                    <div className="card-header">
-                        <h5>Best Sellers</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu10.current.toggle(event)}></Button>
-                            <Menu ref={menu10} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+
+                <div className="p-col-12 p-lg-3">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Best Sellers</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu10.current.toggle(event)}></Button>
+                                <Menu ref={menu10} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
                         </div>
-                    </div>
-                    <ul className="widget-bestsellers">
-                        <li>
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/blue-band.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Blue Band</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                        <ul className="widget-bestsellers">
+                            <li>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/blue-band.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Blue Band</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/bracelet.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Bracelet</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/bracelet.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Bracelet</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/black-watch.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Black Watch</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/black-watch.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Black Watch</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/bamboo-watch.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Bamboo Watch</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/bamboo-watch.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Bamboo Watch</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/blue-t-shirt.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Blue T-Shirt</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/blue-t-shirt.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Blue T-Shirt</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/game-controller.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Game Controller</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/game-controller.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Game Controller</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/gold-phone-case.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Phone Case</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/gold-phone-case.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Phone Case</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
 
-                            <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
-                                <img src="assets/demo/images/product/purple-t-shirt.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
-                                <span>Purple T-Shirt</span>
-                                <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div className="p-col-12 p-lg-9">
-                <div className="card height-100">
-                    <div className="card-header">
-                        <h5>Chat</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu8.current.toggle(event)}></Button>
-                            <Menu ref={menu8} popup model={[{ label: 'View Media', icon: 'pi pi-fw pi-images' }, { label: 'Starred Messages', icon: 'pi pi-fw pi-star-o' }, { label: 'Search', icon: 'pi pi-fw pi-search' }]}></Menu>
-                        </div>
-                    </div>
-                    <div className="widget-chat">
-                        <ul ref={chatcontainer}>
-                            {
-                                chatMessages.map((chatMessage, i) => {
-                                    const last = i === chatMessages.length - 1;
-                                    return <li key={i} className={classNames('p-d-flex p-ai-start', { 'from': chatMessage.from, 'own p-jc-end': !chatMessage.from, 'p-mb-3': !last, 'p-mb-1': last })}>
-                                        {chatMessage.url && <img src={chatMessage.url} alt="avatar" className={classNames({ 'p-mr-2': !isRTL, 'p-ml-2': isRTL })} />}
-                                        <div className={classNames('messages p-d-flex p-flex-column', { 'p-ai-start': chatMessage.from, 'p-ai-end': !chatMessage.from })}>
-                                            {
-                                                chatMessage.messages.map((message, i) => {
-                                                    const first = i === 0
-                                                    return <span key={i} className={classNames('message', { 'cyan-bgcolor': chatMessage.from, 'pink-bgcolor': !chatMessage.from, 'p-mt-1': !first })}>
-                                                        {message}
-                                                    </span>
-                                                })
-                                            }
-                                        </div>
-                                    </li>
-                                })
-                            }
+                                <div className="bestseller-item p-d-flex p-ai-center p-p-3 p-mb-2">
+                                    <img src="assets/demo/images/product/purple-t-shirt.jpg" alt="product" className={classNames({ 'p-mr-3': !isRTL, 'p-ml-3': isRTL })} />
+                                    <span>Purple T-Shirt</span>
+                                    <span className="item-button"><button className="p-link"><i className="pi pi-chevron-right"></i></button></span>
+                                </div>
+                            </li>
                         </ul>
-                        <div className="p-inputgroup write-message p-mt-3">
-                            <span className="p-inputgroup-addon">
-                                <Button type="button" icon="pi pi-plus-circle" className="p-button-text p-button-plain"></Button>
-                            </span>
-                            <InputText placeholder="Write your message (Hint: 'PrimeReact')" onKeyDown={onChatKeydown} />
-                            <span className="p-inputgroup-addon">
-                                <Button type="button" icon="pi pi-video" className="p-button-text p-button-plain"></Button>
-                            </span>
-                            <span className="p-inputgroup-addon">
-                                <Button type="button" icon="pi pi-clock" className="p-button-text p-button-plain"></Button>
-                                <OverlayPanel ref={op} className="emoji">
-                                    {
-                                        chatEmojis.map((emoji, i) => {
-                                            return <Button key={i} type="button" label={emoji} className="emoji-button p-p-2 p-button-text p-button-plain"></Button>
-                                        })
-                                    }
-                                </OverlayPanel>
-                            </span>
+                    </div>
+                </div>
+
+                <div className="p-col-12 p-lg-9">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Chat</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu8.current.toggle(event)}></Button>
+                                <Menu ref={menu8} popup model={[{ label: 'View Media', icon: 'pi pi-fw pi-images' }, { label: 'Starred Messages', icon: 'pi pi-fw pi-star-o' }, { label: 'Search', icon: 'pi pi-fw pi-search' }]}></Menu>
+                            </div>
+                        </div>
+                        <div className="widget-chat">
+                            <ul ref={chatcontainer}>
+                                {
+                                    chatMessages.map((chatMessage, i) => {
+                                        const last = i === chatMessages.length - 1;
+                                        return <li key={i} className={classNames('p-d-flex p-ai-start', { 'from': chatMessage.from, 'own p-jc-end': !chatMessage.from, 'p-mb-3': !last, 'p-mb-1': last })}>
+                                            {chatMessage.url && <img src={chatMessage.url} alt="avatar" className={classNames({ 'p-mr-2': !isRTL, 'p-ml-2': isRTL })} />}
+                                            <div className={classNames('messages p-d-flex p-flex-column', { 'p-ai-start': chatMessage.from, 'p-ai-end': !chatMessage.from })}>
+                                                {
+                                                    chatMessage.messages.map((message, i) => {
+                                                        const first = i === 0
+                                                        return <span key={i} className={classNames('message', { 'cyan-bgcolor': chatMessage.from, 'pink-bgcolor': !chatMessage.from, 'p-mt-1': !first })}>
+                                                            {message}
+                                                        </span>
+                                                    })
+                                                }
+                                            </div>
+                                        </li>
+                                    })
+                                }
+                            </ul>
+                            <div className="p-inputgroup write-message p-mt-3">
+                                <span className="p-inputgroup-addon">
+                                    <Button type="button" icon="pi pi-plus-circle" className="p-button-text p-button-plain"></Button>
+                                </span>
+                                <InputText placeholder="Write your message (Hint: 'PrimeReact')" onKeyDown={onChatKeydown} />
+                                <span className="p-inputgroup-addon">
+                                    <Button type="button" icon="pi pi-video" className="p-button-text p-button-plain"></Button>
+                                </span>
+                                <span className="p-inputgroup-addon">
+                                    <Button type="button" icon="pi pi-clock" className="p-button-text p-button-plain"></Button>
+                                    <OverlayPanel ref={op} className="emoji">
+                                        {
+                                            chatEmojis.map((emoji, i) => {
+                                                return <Button key={i} type="button" label={emoji} className="emoji-button p-p-2 p-button-text p-button-plain"></Button>
+                                            })
+                                        }
+                                    </OverlayPanel>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div className="p-col-12 p-lg-12">
-            {phongTro()}
-            </div>
-        
+                <div className="p-col-12 p-lg-12">
+                    {phongTro()}
+                </div>
 
-            {renderFinanceSection()}
 
-            <div className="p-col-12 p-lg-6">
-                <div className="card height-100">
-                    <div className="card-header">
-                        <h5>Contact</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu5.current.toggle(event)}></Button>
-                            <Menu ref={menu5} popup model={[{ label: 'New', icon: 'pi pi-fw pi-plus' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }, { label: 'Delete', icon: 'pi pi-fw pi-trash' }]}></Menu>
+                {renderFinanceSection()}
+
+                <div className="p-col-12 p-lg-6">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Contact</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu5.current.toggle(event)}></Button>
+                                <Menu ref={menu5} popup model={[{ label: 'New', icon: 'pi pi-fw pi-plus' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }, { label: 'Delete', icon: 'pi pi-fw pi-trash' }]}></Menu>
+                            </div>
                         </div>
+
+                        <ul className="widget-list">
+                            <li className="p-d-flex p-ai-center p-py-3">
+                                <div className="person-item p-d-flex p-ai-center">
+                                    <img src="assets/demo/images/avatar/xuxuefeng.png" alt="" />
+                                    <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                        <div>Xuxue Feng</div>
+                                        <small className="muted-text">feng@ultima.org</small>
+                                    </div>
+                                </div>
+                                <span className={classNames('person-tag indigo-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Accounting</span>
+                                <span className={classNames('person-tag orange-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Sales</span>
+                            </li>
+
+                            <li className="p-d-flex p-ai-center p-py-3">
+                                <div className="person-item p-d-flex p-ai-center">
+                                    <img src="assets/demo/images/avatar/elwinsharvill.png" alt="" />
+                                    <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                        <div>Elwin Sharvill</div>
+                                        <small className="muted-text">sharvill@ultima.org</small>
+                                    </div>
+                                </div>
+                                <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Finance</span>
+                                <span className={classNames('person-tag orange-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Sales</span>
+                            </li>
+
+                            <li className="p-d-flex p-ai-center p-py-3">
+                                <div className="person-item p-d-flex p-ai-center">
+                                    <img src="assets/demo/images/avatar/avatar-1.png" alt="" />
+                                    <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                        <div>Anna Fali</div>
+                                        <small className="muted-text">fali@ultima.org</small>
+                                    </div>
+                                </div>
+                                <span className={classNames('person-tag pink-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Management</span>
+                            </li>
+
+                            <li className="p-d-flex p-ai-center p-py-3">
+                                <div className="person-item p-d-flex p-ai-center">
+                                    <img src="assets/demo/images/avatar/avatar-2.png" alt="" />
+                                    <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                        <div>Jon Stone</div>
+                                        <small className="muted-text">stone@ultima.org</small>
+                                    </div>
+                                </div>
+                                <span className={classNames('person-tag pink-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Management</span>
+                                <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Finance</span>
+                            </li>
+
+                            <li className="p-d-flex p-ai-center p-py-3">
+                                <div className="person-item p-d-flex p-ai-center">
+                                    <img src="assets/demo/images/avatar/avatar-3.png" alt="" />
+                                    <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                        <div>Stephen Shaw</div>
+                                        <small className="muted-text">shaw@ultima.org</small>
+                                    </div>
+                                </div>
+                                <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Finance</span>
+                            </li>
+                        </ul>
                     </div>
-
-                    <ul className="widget-list">
-                        <li className="p-d-flex p-ai-center p-py-3">
-                            <div className="person-item p-d-flex p-ai-center">
-                                <img src="assets/demo/images/avatar/xuxuefeng.png" alt="" />
-                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
-                                    <div>Xuxue Feng</div>
-                                    <small className="muted-text">feng@ultima.org</small>
-                                </div>
-                            </div>
-                            <span className={classNames('person-tag indigo-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Accounting</span>
-                            <span className={classNames('person-tag orange-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Sales</span>
-                        </li>
-
-                        <li className="p-d-flex p-ai-center p-py-3">
-                            <div className="person-item p-d-flex p-ai-center">
-                                <img src="assets/demo/images/avatar/elwinsharvill.png" alt="" />
-                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
-                                    <div>Elwin Sharvill</div>
-                                    <small className="muted-text">sharvill@ultima.org</small>
-                                </div>
-                            </div>
-                            <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Finance</span>
-                            <span className={classNames('person-tag orange-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Sales</span>
-                        </li>
-
-                        <li className="p-d-flex p-ai-center p-py-3">
-                            <div className="person-item p-d-flex p-ai-center">
-                                <img src="assets/demo/images/avatar/avatar-1.png" alt="" />
-                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
-                                    <div>Anna Fali</div>
-                                    <small className="muted-text">fali@ultima.org</small>
-                                </div>
-                            </div>
-                            <span className={classNames('person-tag pink-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Management</span>
-                        </li>
-
-                        <li className="p-d-flex p-ai-center p-py-3">
-                            <div className="person-item p-d-flex p-ai-center">
-                                <img src="assets/demo/images/avatar/avatar-2.png" alt="" />
-                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
-                                    <div>Jon Stone</div>
-                                    <small className="muted-text">stone@ultima.org</small>
-                                </div>
-                            </div>
-                            <span className={classNames('person-tag pink-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Management</span>
-                            <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Finance</span>
-                        </li>
-
-                        <li className="p-d-flex p-ai-center p-py-3">
-                            <div className="person-item p-d-flex p-ai-center">
-                                <img src="assets/demo/images/avatar/avatar-3.png" alt="" />
-                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
-                                    <div>Stephen Shaw</div>
-                                    <small className="muted-text">shaw@ultima.org</small>
-                                </div>
-                            </div>
-                            <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Finance</span>
-                        </li>
-                    </ul>
                 </div>
-            </div>
 
-            <div className="p-col-12 p-lg-6">
-                <div className="card height-100">
-                    <div className="card-header">
-                        <h5>Order Graph</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu6.current.toggle(event)}></Button>
-                            <Menu ref={menu6} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                <div className="p-col-12 p-lg-6">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Order Graph</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu6.current.toggle(event)}></Button>
+                                <Menu ref={menu6} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
                         </div>
+                        <Chart type="line" data={ordersChart} options={ordersOptions}></Chart>
                     </div>
-                    <Chart type="line" data={ordersChart} options={ordersOptions}></Chart>
                 </div>
-            </div>
 
-            <div className="p-col-12 p-lg-6">
-                <div className="card height-100 widget-timeline">
-                    <div className="card-header">
-                        <h5>Timeline</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu7.current.toggle(event)}></Button>
-                            <Menu ref={menu7} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                <div className="p-col-12 p-lg-6">
+                    <div className="card height-100 widget-timeline">
+                        <div className="card-header">
+                            <h5>Timeline</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu7.current.toggle(event)}></Button>
+                                <Menu ref={menu7} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
                         </div>
+
+                        <Timeline value={timelineEvents} align="left" className="customized-timeline" marker={marker} content={content} />
                     </div>
-
-                    <Timeline value={timelineEvents} align="left" className="customized-timeline" marker={marker} content={content} />
                 </div>
-            </div>
 
-            <div className="p-col-12 p-md-12 p-lg-6">
-                <div className="card height-100">
-                    <DataTable value={products} paginator rows={8} className="p-datatable-products"
-                        selection={selectedProduct} onSelectionChange={(e) => setSelectedProduct(e.value)}>
-                        <Column header="Image" body={imageTemplate} style={{ width: '5rem' }} />
-                        <Column field="name" body={bodyTemplate} header="Name" sortable />
-                        <Column field="category" body={bodyTemplate} header="Category" sortable />
-                        <Column field="price" body={priceBodyTemplate} header="Price" sortable />
-                        <Column header="View" body={actionTemplate} style={{ width: '4rem' }} />
-                    </DataTable>
+                <div className="p-col-12 p-md-12 p-lg-6">
+                    <div className="card height-100">
+                        <DataTable value={products} paginator rows={8} className="p-datatable-products"
+                            selection={selectedProduct} onSelectionChange={(e) => setSelectedProduct(e.value)}>
+                            <Column header="Image" body={imageTemplate} style={{ width: '5rem' }} />
+                            <Column field="name" body={bodyTemplate} header="Name" sortable />
+                            <Column field="category" body={bodyTemplate} header="Category" sortable />
+                            <Column field="price" body={priceBodyTemplate} header="Price" sortable />
+                            <Column header="View" body={actionTemplate} style={{ width: '4rem' }} />
+                        </DataTable>
+                    </div>
                 </div>
-            </div>
 
-        
-            <div className="p-col-12 p-lg-3">
-                <div className="card height-100">
-                    <div className="card-header">
-                        <h5>Activity</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu9.current.toggle(event)}></Button>
-                            <Menu ref={menu9} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+
+                <div className="p-col-12 p-lg-3">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Activity</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu9.current.toggle(event)}></Button>
+                                <Menu ref={menu9} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
                         </div>
+
+                        <ul className="widget-activity">
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Income</div>
+                                    <div className="activity-subtext p-mb-2">30 November, 16.20</div>
+                                    <ProgressBar value="50" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Tax</div>
+                                    <div className="activity-subtext p-mb-2">1 December, 15.27</div>
+                                    <ProgressBar value="15" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Invoices</div>
+                                    <div className="activity-subtext p-mb-2">1 December, 15.28</div>
+                                    <ProgressBar value="78" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Expanses</div>
+                                    <div className="activity-subtext p-mb-2">3 December, 09.15</div>
+                                    <ProgressBar value="66" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Bonus</div>
+                                    <div className="activity-subtext p-mb-2">1 December, 23.55</div>
+                                    <ProgressBar value="85" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Revenue</div>
+                                    <div className="activity-subtext p-mb-2">30 November, 16.20</div>
+                                    <ProgressBar value="54" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
-
-                    <ul className="widget-activity">
-                        <li>
-                            <div className="activity-item p-d-flex p-flex-column">
-                                <div className="activity-title p-mb-1">Income</div>
-                                <div className="activity-subtext p-mb-2">30 November, 16.20</div>
-                                <ProgressBar value="50" showValue={false}></ProgressBar>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="activity-item p-d-flex p-flex-column">
-                                <div className="activity-title p-mb-1">Tax</div>
-                                <div className="activity-subtext p-mb-2">1 December, 15.27</div>
-                                <ProgressBar value="15" showValue={false}></ProgressBar>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="activity-item p-d-flex p-flex-column">
-                                <div className="activity-title p-mb-1">Invoices</div>
-                                <div className="activity-subtext p-mb-2">1 December, 15.28</div>
-                                <ProgressBar value="78" showValue={false}></ProgressBar>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="activity-item p-d-flex p-flex-column">
-                                <div className="activity-title p-mb-1">Expanses</div>
-                                <div className="activity-subtext p-mb-2">3 December, 09.15</div>
-                                <ProgressBar value="66" showValue={false}></ProgressBar>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="activity-item p-d-flex p-flex-column">
-                                <div className="activity-title p-mb-1">Bonus</div>
-                                <div className="activity-subtext p-mb-2">1 December, 23.55</div>
-                                <ProgressBar value="85" showValue={false}></ProgressBar>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="activity-item p-d-flex p-flex-column">
-                                <div className="activity-title p-mb-1">Revenue</div>
-                                <div className="activity-subtext p-mb-2">30 November, 16.20</div>
-                                <ProgressBar value="54" showValue={false}></ProgressBar>
-                            </div>
-                        </li>
-                    </ul>
                 </div>
-            </div>
-        
 
-        </div>
-        <Toast ref={toast} />
+
+            </div>
+            <Toast ref={toast} />
         </>
 
     )

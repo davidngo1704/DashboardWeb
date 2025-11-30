@@ -7,6 +7,7 @@ import AppInlineMenu from './AppInlineMenu';
 import AppMenu from './AppMenu';
 import AppConfig from './AppConfig';
 import AppRightMenu from './AppRightMenu';
+import { loadThemeConfig, saveThemeConfig } from './utils/themeStorage';
 import { Dashboard } from './components/Dashboard';
 import { DashboardAnalytics } from './components/DashboardAnalytics';
 import { ButtonDemo } from './components/ButtonDemo';
@@ -47,30 +48,30 @@ import 'primeflex/primeflex.css';
 import './App.scss';
 export const RTLContext = React.createContext(false);
 const App = () => {
-    const getThemeByTime = (date: Date = new Date()): "light" | "dark" => (date.getHours() >= 5 && date.getHours() < 21) ? "light" : "dark";
-      
-      
-    const [menuMode, setMenuMode] = useState('static');
-    const [inlineMenuPosition, setInlineMenuPosition] = useState('bottom');
+    // Load theme config from localStorage on initial mount
+    const initialConfig = loadThemeConfig();
+    
+    const [menuMode, setMenuMode] = useState(initialConfig.menuMode);
+    const [inlineMenuPosition, setInlineMenuPosition] = useState(initialConfig.inlineMenuPosition);
     const [desktopMenuActive, setDesktopMenuActive] = useState(true);
     const [mobileMenuActive, setMobileMenuActive] = useState(false);
     const [activeTopbarItem, setActiveTopbarItem] = useState(null);
-    const [colorMode, setColorMode] = useState(getThemeByTime());
+    const [colorMode, setColorMode] = useState(initialConfig.colorMode);
     const [rightMenuActive, setRightMenuActive] = useState(false);
     const [menuActive, setMenuActive] = useState(false);
-    const [inputStyle, setInputStyle] = useState('filled');
-    const [isRTL, setRTL] = useState<boolean>(false);
-    const [ripple, setRipple] = useState(true);
+    const [inputStyle, setInputStyle] = useState(initialConfig.inputStyle);
+    const [isRTL, setRTL] = useState<boolean>(initialConfig.isRTL);
+    const [ripple, setRipple] = useState(initialConfig.ripple);
     const [mobileTopbarActive, setMobileTopbarActive] = useState(false);
-    const [menuTheme, setMenuTheme] = useState(getThemeByTime());
-    const [topbarTheme, setTopbarTheme] = useState('blue');
-    const [theme, setTheme] = useState('indigo');
+    const [menuTheme, setMenuTheme] = useState(initialConfig.menuTheme);
+    const [topbarTheme, setTopbarTheme] = useState(initialConfig.topbarTheme);
+    const [theme, setTheme] = useState(initialConfig.theme);
     const [isInputBackgroundChanged, setIsInputBackgroundChanged] = useState(false);
     const [inlineMenuActive, setInlineMenuActive] = useState<any>({});
     const [newThemeLoaded, setNewThemeLoaded] = useState(false);
     const [searchActive, setSearchActive] = useState(false)
     let currentInlineMenuKey = useRef('');
-    PrimeReact.ripple = true;
+    PrimeReact.ripple = initialConfig.ripple;
     let searchClick: boolean;
     let topbarItemClick: boolean;
     let menuClick: boolean;
@@ -243,6 +244,21 @@ const App = () => {
             setMenu(menu1);
         })();
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Save theme config to localStorage whenever any theme state changes
+    useEffect(() => {
+        saveThemeConfig({
+            menuMode,
+            inlineMenuPosition,
+            colorMode,
+            inputStyle,
+            isRTL,
+            ripple,
+            menuTheme,
+            topbarTheme,
+            theme
+        });
+    }, [menuMode, inlineMenuPosition, colorMode, inputStyle, isRTL, ripple, menuTheme, topbarTheme, theme]);
     const onMenuThemeChange = (theme: any) => {
         setMenuTheme(theme)
     }
