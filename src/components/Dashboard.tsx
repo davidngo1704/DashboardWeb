@@ -14,6 +14,9 @@ import { OverlayPanel } from 'primereact/overlaypanel';
 import { Toast } from 'primereact/toast';
 import { RTLContext } from '../App';
 import httpClient from "../utils/htttpClient";
+
+import { fetchPrices, SymbolCode, PriceResult } from '../utils/stockClient';
+
 const overviewChartData1 = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'],
     datasets: [
@@ -491,64 +494,64 @@ export const Dashboard = (props: any) => {
     };
     const [captiens, setCaptiens] = React.useState<any[]>([]);
 
+    const [prices, setPrices] = useState<any[]>([]);
+
+    const symbols: SymbolCode[] = [
+        "ETH","BTC","SOL","ONDO",
+        "GOLD",
+        "TESLA","NVIDIA","APPLE","GOOGLE",
+        "META","AMAZON","MICROSOFT"
+      ];
+    
+
     useEffect(() => {
         const productService = new ProductService();
         productService.getProducts().then(data => setProducts(data));
         ordersOptions = getOrdersOptions();
         setOverviewColors();
 
-    
+        
+        fetchPrices(symbols).then(setPrices);
+          
 
         (async () => {
             try {
                 setCaptiens([
                     {
-                        name: 'USD',
-                        code: 'USD',
+                        name: 'ETH',
                     },
                     {
-                        name: 'EUR',
-                        code: 'EUR',
+                        name: 'BTC',
                     },
                     {
-                        name: 'GBP',
-                        code: 'GBP',
+                        name: 'SOL',
                     },
                     {
-                        name: 'GBP',
-                        code: 'GBP',
+                        name: 'ONDO',
                     },
                     {
-                        name: 'USD',
-                        code: 'USD',
+                        name: 'GOLD',
                     },
                     {
-                        name: 'EUR',
-                        code: 'EUR',
+                        name: 'TESLA',
                     },
                     {
-                        name: 'GBP',
-                        code: 'GBP',
+                        name: 'NVIDIA',
                     },
                     {
-                        name: 'GBP',
-                        code: 'GBP',
+                        name: 'APPLE',
                     },
                     {
-                        name: 'USD',
-                        code: 'USD',
+                        name: 'GOOGLE',
                     },
                     {
-                        name: 'EUR',
-                        code: 'EUR',
+                        name: 'META',
                     },
                     {
-                        name: 'GBP',
-                        code: 'GBP',
+                        name: 'AMAZON',
                     },
                     {
-                        name: 'GBP',
-                        code: 'GBP',
+                        name: 'MICROSOFT',
                     },
                 ]);
             } catch (error) {
@@ -558,13 +561,13 @@ export const Dashboard = (props: any) => {
 
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const renderFinanceSection = () => {
-        return captiens.map(item => {
+        return prices.map(item => {
             return <React.Fragment>
                 <div className="p-col-12 p-md-6 p-lg-3">
                     <div className="card overview-box p-d-flex p-flex-column p-pt-2">
                         <div className="p-d-flex p-ai-center muted-text">
                             <i className="pi pi-dollar"></i>
-                            <h6 className={classNames('p-m-0', { 'p-pl-2': !isRTL, 'p-pr-2': isRTL })}>{item.name}</h6>
+                            <h6 className={classNames('p-m-0', { 'p-pl-2': !isRTL, 'p-pr-2': isRTL })}>{item.code}</h6>
                             <div className={classNames({ 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>
                                 <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu2.current.toggle(event)}></Button>
                                 <Menu ref={menu2} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
@@ -572,8 +575,7 @@ export const Dashboard = (props: any) => {
                         </div>
                         <div className="p-d-flex p-jc-between p-mt-3 p-flex-wrap">
                             <div className="p-d-flex p-flex-column" style={{ width: '80px' }}>
-                                <span className="p-mb-1 fs-xlarge">$57K</span>
-                                <span className="overview-status p-p-1 teal-bgcolor fs-small">$9,640 Income</span>
+                                <span className="p-mb-1 fs-xlarge">${item.price}</span>
                             </div>
                             <div className="p-d-flex p-ai-end">
                                 <Chart type="line" data={overviewChartData2} options={overviewChartOptions} height="60px" width="160px"></Chart>
@@ -672,7 +674,7 @@ export const Dashboard = (props: any) => {
     return (
         <>
             <div className="p-grid dashboard">
-
+                {renderFinanceSection()}
 
                 <div className="p-col-12 p-lg-3">
                     <div className="card height-100">
@@ -794,7 +796,6 @@ export const Dashboard = (props: any) => {
                 </div>
 
 
-                {renderFinanceSection()}
 
                 <div className="p-col-12 p-lg-6">
                     <div className="card height-100">
