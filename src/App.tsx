@@ -80,7 +80,8 @@ const App = () => {
         {
             label: 'Favorites', icon: 'pi pi-fw pi-home',
             items: [
-                { label: 'Dashboard Sales', icon: 'pi pi-fw pi-home', to: '/', badge: '4', badgeClassName: 'p-badge-info' },
+                { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/', badge: '4', badgeClassName: 'p-badge-info' },
+                { label: 'Tài liệu', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
                 { label: 'Dashboard Analytics', icon: 'pi pi-fw pi-home', to: '/favorites/dashboardanalytics', badge: '2', badgeClassName: 'p-badge-success' },
             ]
         },
@@ -94,7 +95,6 @@ const App = () => {
                 { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', className: 'rotated-icon' },
                 { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table', badge: '6', badgeClassName: 'p-badge-help' },
                 { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
-                { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
                 { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
                 { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },
                 { label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/uikit/menu' },

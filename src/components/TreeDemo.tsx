@@ -8,7 +8,8 @@ import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import NodeService from '../service/NodeService';
+import { addDataToFirebase, getDataFromFirebase } from '../firebase';
+import { getAllItems, addManyItems, clearAllItems } from "../indexedDB";
 
 interface TreeNode {
     key: string;
@@ -18,10 +19,20 @@ interface TreeNode {
     children?: TreeNode[];
 }
 
+interface PersistedNode {
+    key: string;
+    label: string;
+    type: 'folder' | 'file';
+    parentKey?: string;
+}
+
+const DB_NAME = "daint_app_db";
+const STORE_NAME = "documents";
+
 export const TreeDemo = () => {
 
     const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
-    const [selectedTreeNodeKeys, setSelectedTreeNodeKeys] = useState<{ [key: string]: boolean }>({});
+    const [selectedTreeNodeKeys, setSelectedTreeNodeKeys] = useState<string | { [key: string]: boolean } | null>(null);
     const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
     const [fileContents, setFileContents] = useState<{ [key: string]: string }>({});
     const [currentFileContent, setCurrentFileContent] = useState('');
@@ -33,13 +44,69 @@ export const TreeDemo = () => {
     const contextMenu = useRef<any>(null);
     const toast = useRef<any>(null);
 
-    useEffect(() => {
-        const nodeService = new NodeService();
-        nodeService.getTreeNodes().then(data => {
-            console.log(data);
-            setTreeNodes(data)
+    const buildTreeFromItems = (items: PersistedNode[]): TreeNode[] => {
+        const rootNode: TreeNode = {
+            key: "0",
+            label: "Tài liệu",
+            data: "RootFolder",
+            icon: "pi pi-home",
+            children: []
+        };
+
+        const nodeMap = new Map<string, TreeNode>();
+
+        items.forEach(item => {
+            nodeMap.set(item.key, {
+                key: item.key,
+                label: item.label,
+                data: item.type === 'folder' ? `${item.label} Folder` : `${item.label} File`,
+                icon: item.type === 'folder' ? 'pi pi-fw pi-folder' : 'pi pi-fw pi-file',
+                children: item.type === 'folder' ? [] : undefined
+            });
         });
+
+        items.forEach(item => {
+            const node = nodeMap.get(item.key);
+            if (!node) return;
+
+            if (!item.parentKey || item.parentKey === '0') {
+                rootNode.children?.push(node);
+                return;
+            }
+
+            const parentNode = nodeMap.get(item.parentKey);
+            if (parentNode) {
+                if (!parentNode.children) {
+                    parentNode.children = [];
+                }
+                parentNode.children.push(node);
+            }
+        });
+
+        return [rootNode];
+    };
+
+    useEffect(() => {
+        (async () => {
+            let items = await getAllItems(DB_NAME, STORE_NAME);
+
+            if(!items || items.length <= 0) {
+                //alert("query vào fireStore");
+                console.log("query vào fireStore");
+
+                items = await getDataFromFirebase(STORE_NAME);
+
+                await addManyItems(items, DB_NAME, STORE_NAME);
+            }
+
+            console.log(items);
+          
+            setTreeNodes(buildTreeFromItems(items as PersistedNode[]));
+        })();
+
     }, []);
+
+    
 
     // Helper function to find node by key
     const findNodeByKey = (nodes: TreeNode[], key: string): TreeNode | null => {
@@ -53,6 +120,16 @@ export const TreeDemo = () => {
             }
         }
         return null;
+    };
+
+    const getSelectedKey = (): string => {
+        if (!selectedTreeNodeKeys) {
+            return '';
+        }
+
+        return typeof selectedTreeNodeKeys === 'string'
+            ? selectedTreeNodeKeys
+            : Object.keys(selectedTreeNodeKeys)[0];
     };
 
     // Helper function to update tree nodes
@@ -86,7 +163,7 @@ export const TreeDemo = () => {
 
     // Handle node click - show file content if it's a file
     const handleNodeClick = useCallback(() => {
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (selectedKey) {
             const node = findNodeByKey(treeNodes, selectedKey);
             if (node) {
@@ -106,6 +183,7 @@ export const TreeDemo = () => {
         }
     }, [selectedTreeNodeKeys, treeNodes, fileContents]);
 
+    
     // Handle add node
     const handleAddNode = () => {
         if (!newNodeName.trim()) {
@@ -113,7 +191,7 @@ export const TreeDemo = () => {
             return;
         }
 
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (!selectedKey) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một thư mục để thêm vào', life: 3000 });
             return;
@@ -140,6 +218,19 @@ export const TreeDemo = () => {
             icon: newNodeType === 'folder' ? 'pi pi-fw pi-folder' : 'pi pi-fw pi-file',
             children: newNodeType === 'folder' ? [] : undefined
         };
+
+        const newNodeData: any = {
+            key: newKey,
+            label: newNodeName,
+            type: newNodeType,
+            parentKey: selectedKey,
+        };
+
+        console.log(newNodeData);
+
+        //addDataToFirebase(newNodeData, STORE_NAME);
+
+        clearAllItems(DB_NAME, STORE_NAME);
 
         setTreeNodes(prevNodes => {
             return updateTreeNodes(prevNodes, selectedKey, (node) => {
@@ -170,7 +261,7 @@ export const TreeDemo = () => {
             return;
         }
 
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (!selectedKey) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một node để sửa', life: 3000 });
             return;
@@ -193,7 +284,7 @@ export const TreeDemo = () => {
 
     // Handle delete node
     const handleDeleteNode = () => {
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (!selectedKey) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một node để xóa', life: 3000 });
             return;
@@ -231,7 +322,7 @@ export const TreeDemo = () => {
             removeChildrenContents(node);
         }
 
-        setSelectedTreeNodeKeys({});
+        setSelectedTreeNodeKeys(null);
         setSelectedNode(null);
         setCurrentFileContent('');
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã xóa node', life: 3000 });
@@ -244,19 +335,18 @@ export const TreeDemo = () => {
 
     // Open add dialog
     const openAddDialog = () => {
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (!selectedKey) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một thư mục để thêm vào', life: 3000 });
             return;
         }
         setNewNodeName('');
-        setNewNodeType('folder');
         setAddDialog(true);
     };
 
     // Open edit dialog
     const openEditDialog = () => {
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (!selectedKey) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một node để sửa', life: 3000 });
             return;
@@ -270,7 +360,7 @@ export const TreeDemo = () => {
 
     // Confirm delete
     const confirmDelete = () => {
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (!selectedKey) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một node để xóa', life: 3000 });
             return;
@@ -286,7 +376,7 @@ export const TreeDemo = () => {
 
     // Save file content
     const handleSaveFileContent = () => {
-        const selectedKey = Object.keys(selectedTreeNodeKeys)[0];
+        const selectedKey = getSelectedKey();
         if (selectedKey) {
             setFileContents(prev => ({
                 ...prev,
@@ -336,49 +426,15 @@ export const TreeDemo = () => {
             <Toast ref={toast} />
             <ConfirmDialog />
             <ContextMenu model={contextMenuItems} ref={contextMenu} />
-            
+
             <div className="p-grid">
                 <div className="p-col-3">
                     <div className="card">
-                        <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            <Button 
-                                label="Thêm thư mục" 
-                                icon="pi pi-folder-plus" 
-                                className="p-button-sm" 
-                                onClick={() => {
-                                    setNewNodeType('folder');
-                                    openAddDialog();
-                                }}
-                            />
-                            <Button 
-                                label="Thêm file" 
-                                icon="pi pi-file-plus" 
-                                className="p-button-sm p-button-secondary" 
-                                onClick={() => {
-                                    setNewNodeType('file');
-                                    openAddDialog();
-                                }}
-                            />
-                            <Button 
-                                label="Sửa" 
-                                icon="pi pi-pencil" 
-                                className="p-button-sm p-button-info" 
-                                onClick={openEditDialog}
-                                disabled={!selectedNode}
-                            />
-                            <Button 
-                                label="Xóa" 
-                                icon="pi pi-trash" 
-                                className="p-button-sm p-button-danger" 
-                                onClick={confirmDelete}
-                                disabled={!selectedNode}
-                            />
-                        </div>
                         <div onContextMenu={handleContextMenu}>
-                            <Tree 
-                                value={treeNodes} 
-                                selectionMode="single" 
-                                selectionKeys={selectedTreeNodeKeys} 
+                            <Tree
+                                value={treeNodes}
+                                selectionMode="single"
+                                selectionKeys={selectedTreeNodeKeys}
                                 onSelectionChange={(e) => {
                                     setSelectedTreeNodeKeys(e.value);
                                 }}
@@ -391,23 +447,23 @@ export const TreeDemo = () => {
                         {selectedNode ? (
                             <>
                                 <h5>
-                                    {selectedNode.icon === 'pi pi-fw pi-file' || (!selectedNode.children && selectedNode.icon !== 'pi pi-fw pi-folder') 
-                                        ? 'Nội dung file: ' + selectedNode.label 
+                                    {selectedNode.icon === 'pi pi-fw pi-file' || (!selectedNode.children && selectedNode.icon !== 'pi pi-fw pi-folder')
+                                        ? 'Nội dung file: ' + selectedNode.label
                                         : 'Thông tin: ' + selectedNode.label}
                                 </h5>
                                 {(!selectedNode.children && (selectedNode.icon === 'pi pi-fw pi-file' || !selectedNode.icon || selectedNode.icon.includes('file'))) ? (
                                     <div>
-                                        <InputTextarea 
-                                            value={currentFileContent} 
+                                        <InputTextarea
+                                            value={currentFileContent}
                                             onChange={(e) => setCurrentFileContent(e.target.value)}
                                             rows={20}
                                             style={{ width: '100%', fontFamily: 'monospace' }}
                                             placeholder="Nhập nội dung file..."
                                         />
                                         <div style={{ marginTop: '1rem' }}>
-                                            <Button 
-                                                label="Lưu" 
-                                                icon="pi pi-save" 
+                                            <Button
+                                                label="Lưu"
+                                                icon="pi pi-save"
                                                 onClick={handleSaveFileContent}
                                             />
                                         </div>
@@ -430,12 +486,12 @@ export const TreeDemo = () => {
             </div>
 
             {/* Add Dialog */}
-            <Dialog 
-                visible={addDialog} 
-                style={{ width: '450px' }} 
-                header="Thêm mới" 
-                modal 
-                className="p-fluid" 
+            <Dialog
+                visible={addDialog}
+                style={{ width: '450px' }}
+                header="Thêm mới"
+                modal
+                className="p-fluid"
                 onHide={() => setAddDialog(false)}
                 footer={
                     <div>
@@ -446,38 +502,33 @@ export const TreeDemo = () => {
             >
                 <div className="p-field">
                     <label htmlFor="nodeName">Tên</label>
-                    <InputText 
-                        id="nodeName" 
-                        value={newNodeName} 
-                        onChange={(e) => setNewNodeName(e.target.value)} 
+                    <InputText
+                        id="nodeName"
+                        value={newNodeName}
+                        onChange={(e) => setNewNodeName(e.target.value)}
                         autoFocus
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                handleAddNode();
-                            }
-                        }}
                     />
                 </div>
                 <div className="p-field">
                     <label>Loại</label>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                         <div className="p-field-radiobutton">
-                            <RadioButton 
-                                inputId="typeFolder" 
-                                name="nodeType" 
-                                value="folder" 
-                                checked={newNodeType === 'folder'} 
-                                onChange={(e) => setNewNodeType('folder')} 
+                            <RadioButton
+                                inputId="typeFolder"
+                                name="nodeType"
+                                value="folder"
+                                checked={newNodeType === 'folder'}
+                                onChange={(e) => setNewNodeType('folder')}
                             />
                             <label htmlFor="typeFolder" style={{ marginLeft: '0.5rem' }}>Thư mục</label>
                         </div>
                         <div className="p-field-radiobutton">
-                            <RadioButton 
-                                inputId="typeFile" 
-                                name="nodeType" 
-                                value="file" 
-                                checked={newNodeType === 'file'} 
-                                onChange={(e) => setNewNodeType('file')} 
+                            <RadioButton
+                                inputId="typeFile"
+                                name="nodeType"
+                                value="file"
+                                checked={newNodeType === 'file'}
+                                onChange={(e) => setNewNodeType('file')}
                             />
                             <label htmlFor="typeFile" style={{ marginLeft: '0.5rem' }}>File</label>
                         </div>
@@ -486,12 +537,12 @@ export const TreeDemo = () => {
             </Dialog>
 
             {/* Edit Dialog */}
-            <Dialog 
-                visible={editDialog} 
-                style={{ width: '450px' }} 
-                header="Sửa tên" 
-                modal 
-                className="p-fluid" 
+            <Dialog
+                visible={editDialog}
+                style={{ width: '450px' }}
+                header="Sửa tên"
+                modal
+                className="p-fluid"
                 onHide={() => setEditDialog(false)}
                 footer={
                     <div>
@@ -502,16 +553,11 @@ export const TreeDemo = () => {
             >
                 <div className="p-field">
                     <label htmlFor="editNodeName">Tên mới</label>
-                    <InputText 
-                        id="editNodeName" 
-                        value={editNodeName} 
-                        onChange={(e) => setEditNodeName(e.target.value)} 
+                    <InputText
+                        id="editNodeName"
+                        value={editNodeName}
+                        onChange={(e) => setEditNodeName(e.target.value)}
                         autoFocus
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                handleEditNode();
-                            }
-                        }}
                     />
                 </div>
             </Dialog>
