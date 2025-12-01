@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, ChangeEvent } from 'react';
 import { Tree } from 'primereact/tree';
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem } from 'primereact/menuitem';
@@ -9,7 +9,7 @@ import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { addDataToFirebase, getDataFromFirebase, updateDataToFirebase, deleteDataFromFirebase } from '../firebase';
+import { addDataToFirebase, getDataFromFirebase, updateDataToFirebase, deleteDataFromFirebase, uploadFile, deleteFile, readFileAsString } from '../firebase';
 import { getAllItems, addManyItems, clearAllItems } from "../indexedDB";
 
 interface TreeNode {
@@ -36,7 +36,7 @@ export const TreeDemo = () => {
     const [selectedTreeNodeKeys, setSelectedTreeNodeKeys] = useState<string | { [key: string]: boolean } | null>(null);
     const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
     const [fileContents, setFileContents] = useState<{ [key: string]: string }>({});
-    const [currentFileContent, setCurrentFileContent] = useState('');
+    const [currentFileContent, setCurrentFileContent] = useState<any>('');
     const [addDialog, setAddDialog] = useState(false);
     const [editDialog, setEditDialog] = useState(false);
     const [newNodeName, setNewNodeName] = useState('');
@@ -47,6 +47,8 @@ export const TreeDemo = () => {
     const toast = useRef<any>(null);
     const [contextMenuType, setContextMenuType] = useState<'folder' | 'file'>('folder');
     const [itemDocuments, setItemDocuments] = useState<any[]>([]);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const uploadTargetKeyRef = useRef<string | null>(null);
     
 
     useEffect(() => {
@@ -132,6 +134,61 @@ export const TreeDemo = () => {
             : Object.keys(selectedTreeNodeKeys)[0];
     };
 
+    const findLabelPathByKey = (nodes: TreeNode[], key: string, currentPath: string[] = []): string[] | null => {
+        for (const node of nodes) {
+            const newPath = [...currentPath, node.label];
+            if (node.key === key) {
+                return newPath;
+            }
+            if (node.children) {
+                const childPath = findLabelPathByKey(node.children, key, newPath);
+                if (childPath) {
+                    return childPath;
+                }
+            }
+        }
+        return null;
+    };
+
+    // Helper: lấy full path (ví dụ: documents/ApiGateway/cleanup.sh) từ key đang chọn
+    const getSelectedFullPath = (targetKey?: string): string | null => {
+        const selectedKey = targetKey ?? getSelectedKey();
+        if (!selectedKey) {
+            return null;
+        }
+
+        if (selectedKey === '0') {
+            return STORE_NAME;
+        }
+
+        const segments: string[] = [];
+        let currentItem: any | undefined = itemDocuments.find(m => m.key === selectedKey);
+
+        while (currentItem) {
+            segments.push(currentItem.label);
+
+            // Dừng khi đã tới root (parentKey rỗng hoặc '0')
+            if (!currentItem.parentKey || currentItem.parentKey === '0') {
+                break;
+            }
+
+            currentItem = itemDocuments.find(m => m.key === currentItem.parentKey);
+        }
+
+        if (segments.length === 0) {
+            const labelPath = findLabelPathByKey(treeNodes, selectedKey);
+            if (labelPath && labelPath.length > 1) {
+                return [STORE_NAME, ...labelPath.slice(1)].join('/');
+            }
+            return STORE_NAME;
+        }
+
+        // Thêm tên store "documents" ở đầu cho đúng format ví dụ
+        segments.push(STORE_NAME);
+
+        return segments.reverse().join('/');
+    };
+
     // Helper function to update tree nodes
     const updateTreeNodes = (nodes: TreeNode[], key: string, updateFn: (node: TreeNode) => TreeNode): TreeNode[] => {
         return nodes.map(node => {
@@ -164,24 +221,39 @@ export const TreeDemo = () => {
     // Handle node click - show file content if it's a file
     const handleNodeClick = useCallback(() => {
         const selectedKey = getSelectedKey();
-        if (selectedKey) {
-            const node = findNodeByKey(treeNodes, selectedKey);
-            if (node) {
-                setSelectedNode(node);
-                // Check if it's a file (has pi-file icon or no children)
-                const isFile = !node.children && (node.icon === 'pi pi-fw pi-file' || !node.icon || node.icon.includes('file'));
-                if (isFile) {
-                    const content = fileContents[selectedKey] || '';
-                    setCurrentFileContent(content);
-                } else {
-                    setCurrentFileContent('');
-                }
-            }
-        } else {
+        if (!selectedKey) {
             setSelectedNode(null);
             setCurrentFileContent('');
+            return;
         }
-    }, [selectedTreeNodeKeys, treeNodes, fileContents]);
+
+        const node = findNodeByKey(treeNodes, selectedKey);
+        if (!node) {
+            setSelectedNode(null);
+            setCurrentFileContent('');
+            return;
+        }
+
+        setSelectedNode(node);
+
+        const item = itemDocuments.find(m => m.key === selectedKey);
+        const isFile = !node.children || item?.type === 'file';
+        if (!isFile) {
+            setCurrentFileContent('');
+            return;
+        }
+
+        const fullPath = getSelectedFullPath();
+        if (!fullPath) {
+            setCurrentFileContent('');
+            return;
+        }
+
+        (async () => {
+            const content = await readFileAsString(fullPath);
+            setCurrentFileContent(content);
+        })();
+    }, [selectedTreeNodeKeys, treeNodes, itemDocuments]);
 
     
     // Handle add node
@@ -331,8 +403,14 @@ export const TreeDemo = () => {
         let item = itemDocuments.find(m => m.key === selectedKey);
 
         deleteDataFromFirebase(item.id, STORE_NAME);
-        
+
         clearAllItems(DB_NAME, STORE_NAME);
+
+        if (item.type === "file") {
+            let fullPath = getSelectedFullPath();
+
+            deleteFile(fullPath);
+        }
 
         setSelectedTreeNodeKeys(null);
         setSelectedNode(null);
@@ -414,18 +492,105 @@ export const TreeDemo = () => {
         const selectedKey = getSelectedKey();
         if (selectedKey) {
 
-            let item = itemDocuments.find(m => m.key === selectedKey);
+            let fullPath = getSelectedFullPath();
 
-            console.log(item, currentFileContent);
+            uploadFile(currentFileContent, fullPath);
 
+            toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
+        }
+    };
+
+    const handleUploadFileMenuClick = useCallback(() => {
+        const selectedKey = getSelectedKey();
+        if (!selectedKey) {
+            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn thư mục để upload', life: 3000 });
+            return;
+        }
+
+        const node = findNodeByKey(treeNodes, selectedKey);
+        const isFolder = !!node?.children;
+
+        if (!isFolder) {
+            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể upload vào thư mục', life: 3000 });
+            return;
+        }
+
+        uploadTargetKeyRef.current = selectedKey;
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+            fileInputRef.current.click();
+        }
+    }, [treeNodes, selectedTreeNodeKeys]);
+
+    const handleFileInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        const parentKey = uploadTargetKeyRef.current || getSelectedKey();
+        uploadTargetKeyRef.current = null;
+
+        if (!parentKey) {
+            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không xác định được thư mục cần upload', life: 3000 });
+            event.target.value = '';
+            return;
+        }
+
+        const parentNode = findNodeByKey(treeNodes, parentKey);
+        const isFolder = !!parentNode?.children;
+
+        if (!isFolder) {
+            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể upload vào thư mục', life: 3000 });
+            event.target.value = '';
+            return;
+        }
+
+        const folderPath = getSelectedFullPath(parentKey) || STORE_NAME;
+        const filePath = `${folderPath}/${file.name}`;
+        const newKey = `${parentKey}-${Date.now()}`;
+
+        try {
+            await uploadFile(file, filePath);
+
+            const newNode: TreeNode = {
+                key: newKey,
+                label: file.name,
+                data: `${file.name} File`,
+                icon: 'pi pi-fw pi-file'
+            };
+
+            setTreeNodes(prevNodes => {
+                return updateTreeNodes(prevNodes, parentKey, (node) => ({
+                    ...node,
+                    children: [...(node.children || []), newNode]
+                }));
+            });
 
             setFileContents(prev => ({
                 ...prev,
-                [selectedKey]: currentFileContent
+                [newKey]: ''
             }));
 
+            const newNodeData = {
+                key: newKey,
+                label: file.name,
+                type: 'file',
+                parentKey
+            };
 
-            toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
+            await addDataToFirebase(newNodeData, STORE_NAME);
+
+            clearAllItems(DB_NAME, STORE_NAME);
+
+            setItemDocuments(prev => [...prev, newNodeData]);
+
+            toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã upload "${file.name}"`, life: 3000 });
+        } catch (error) {
+            console.error(error);
+            toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Upload thất bại', life: 3000 });
+        } finally {
+            event.target.value = '';
         }
     };
 
@@ -447,6 +612,13 @@ export const TreeDemo = () => {
                     setNewNodeType('file');
                     openAddDialog();
                 }
+            },
+            {
+                label: 'Upload file',
+                icon: 'pi pi-file-plus',
+                command: () => {
+                    handleUploadFileMenuClick();
+                }
             }
         ];
 
@@ -464,7 +636,7 @@ export const TreeDemo = () => {
         ];
 
         return contextMenuType === 'file' ? actionItems : [...additionItems, ...actionItems];
-    }, [contextMenuType, openAddDialog, openEditDialog, confirmDelete]);
+    }, [contextMenuType, openAddDialog, openEditDialog, confirmDelete, handleUploadFileMenuClick]);
 
     // Update selected node when selection changes
     useEffect(() => {
@@ -476,6 +648,12 @@ export const TreeDemo = () => {
             <Toast ref={toast} />
             <ConfirmDialog />
             <ContextMenu model={contextMenuItems} ref={contextMenu} />
+            <input
+                ref={fileInputRef}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={handleFileInputChange}
+            />
 
             <div className="p-grid">
                 <div className="p-col-3">
