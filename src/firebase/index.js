@@ -2,12 +2,17 @@ import { collection, addDoc, updateDoc, deleteDoc, getDocs, getDoc, doc } from "
 import { db } from "./firebase";
 
 export async function addDataToFirebase(data, collectionName) {
-    await addDoc(collection(db, collectionName), data);
+    const ref = await addDoc(collection(db, collectionName), data);
+    return ref.id; // trả id cho client
 }
 
+
 export async function getDataFromFirebase(collectionName) {
-    const users = await getDocs(collection(db, collectionName));
-    return users.docs.map((doc) => doc.data());
+    const data = await getDocs(collection(db, collectionName));
+    return data.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+    }));
 }
 
 export async function getDataToFirebase(id, collectionName) {
@@ -16,7 +21,13 @@ export async function getDataToFirebase(id, collectionName) {
 }
 
 export async function updateDataToFirebase(id, data, collectionName) {
-    await updateDoc(doc(db, collectionName, id), data);
+    try {
+        console.log(id, data, collectionName);
+        await updateDoc(doc(db, collectionName, id), data);
+        
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 export async function deleteDataFromFirebase(id, collectionName) {

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Tree } from 'primereact/tree';
 import { ContextMenu } from 'primereact/contextmenu';
+import { MenuItem } from 'primereact/menuitem';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -8,7 +9,7 @@ import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { addDataToFirebase, getDataFromFirebase } from '../firebase';
+import { addDataToFirebase, getDataFromFirebase, updateDataToFirebase, deleteDataFromFirebase } from '../firebase';
 import { getAllItems, addManyItems, clearAllItems } from "../indexedDB";
 
 interface TreeNode {
@@ -42,7 +43,28 @@ export const TreeDemo = () => {
     const [newNodeType, setNewNodeType] = useState<'folder' | 'file'>('folder');
     const [editNodeName, setEditNodeName] = useState('');
     const contextMenu = useRef<any>(null);
+    const pendingContextMenuEvent = useRef<any>(null);
     const toast = useRef<any>(null);
+    const [contextMenuType, setContextMenuType] = useState<'folder' | 'file'>('folder');
+    const [itemDocuments, setItemDocuments] = useState<any[]>([]);
+    
+
+    useEffect(() => {
+        (async () => {
+            let items = await getAllItems(DB_NAME, STORE_NAME);
+
+            if(!items || items.length <= 0) {
+                items = await getDataFromFirebase(STORE_NAME);
+
+                await addManyItems(items, DB_NAME, STORE_NAME);
+            }
+
+            setItemDocuments(items);
+          
+            setTreeNodes(buildTreeFromItems(items as PersistedNode[]));
+        })();
+
+    }, []);
 
     const buildTreeFromItems = (items: PersistedNode[]): TreeNode[] => {
         const rootNode: TreeNode = {
@@ -85,28 +107,6 @@ export const TreeDemo = () => {
 
         return [rootNode];
     };
-
-    useEffect(() => {
-        (async () => {
-            let items = await getAllItems(DB_NAME, STORE_NAME);
-
-            if(!items || items.length <= 0) {
-                //alert("query vào fireStore");
-                console.log("query vào fireStore");
-
-                items = await getDataFromFirebase(STORE_NAME);
-
-                await addManyItems(items, DB_NAME, STORE_NAME);
-            }
-
-            console.log(items);
-          
-            setTreeNodes(buildTreeFromItems(items as PersistedNode[]));
-        })();
-
-    }, []);
-
-    
 
     // Helper function to find node by key
     const findNodeByKey = (nodes: TreeNode[], key: string): TreeNode | null => {
@@ -226,9 +226,7 @@ export const TreeDemo = () => {
             parentKey: selectedKey,
         };
 
-        console.log(newNodeData);
-
-        //addDataToFirebase(newNodeData, STORE_NAME);
+        addDataToFirebase(newNodeData, STORE_NAME);
 
         clearAllItems(DB_NAME, STORE_NAME);
 
@@ -277,6 +275,14 @@ export const TreeDemo = () => {
             });
         });
 
+        let item = itemDocuments.find(m => m.key === selectedKey);
+
+        item.label = editNodeName;
+
+        updateDataToFirebase(item.id, item, STORE_NAME);
+
+        clearAllItems(DB_NAME, STORE_NAME);
+
         setEditNodeName('');
         setEditDialog(false);
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật tên', life: 3000 });
@@ -322,6 +328,12 @@ export const TreeDemo = () => {
             removeChildrenContents(node);
         }
 
+        let item = itemDocuments.find(m => m.key === selectedKey);
+
+        deleteDataFromFirebase(item.id, STORE_NAME);
+        
+        clearAllItems(DB_NAME, STORE_NAME);
+
         setSelectedTreeNodeKeys(null);
         setSelectedNode(null);
         setCurrentFileContent('');
@@ -330,8 +342,31 @@ export const TreeDemo = () => {
 
     // Handle context menu
     const handleContextMenu = (e: any) => {
+        e.preventDefault();
+        if (typeof e.persist === 'function') {
+            e.persist();
+        }
+
+        const selectedKey = getSelectedKey();
+        const node = selectedKey ? findNodeByKey(treeNodes, selectedKey) : null;
+        const isFileNode = node ? !node.children : false;
+        const targetMenuType: 'folder' | 'file' = isFileNode ? 'file' : 'folder';
+
+        if (targetMenuType !== contextMenuType) {
+            pendingContextMenuEvent.current = e;
+            setContextMenuType(targetMenuType);
+            return;
+        }
+
         contextMenu.current?.show(e);
     };
+
+    useEffect(() => {
+        if (pendingContextMenuEvent.current) {
+            contextMenu.current?.show(pendingContextMenuEvent.current);
+            pendingContextMenuEvent.current = null;
+        }
+    }, [contextMenuType]);
 
     // Open add dialog
     const openAddDialog = () => {
@@ -378,43 +413,58 @@ export const TreeDemo = () => {
     const handleSaveFileContent = () => {
         const selectedKey = getSelectedKey();
         if (selectedKey) {
+
+            let item = itemDocuments.find(m => m.key === selectedKey);
+
+            console.log(item, currentFileContent);
+
+
             setFileContents(prev => ({
                 ...prev,
                 [selectedKey]: currentFileContent
             }));
+
+
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
         }
     };
 
     // Context menu items
-    const contextMenuItems = [
-        {
-            label: 'Thêm thư mục',
-            icon: 'pi pi-folder-plus',
-            command: () => {
-                setNewNodeType('folder');
-                openAddDialog();
+    const contextMenuItems = useMemo<MenuItem[]>(() => {
+        const additionItems: MenuItem[] = [
+            {
+                label: 'Thêm thư mục',
+                icon: 'pi pi-folder-plus',
+                command: () => {
+                    setNewNodeType('folder');
+                    openAddDialog();
+                }
+            },
+            {
+                label: 'Thêm file',
+                icon: 'pi pi-file-plus',
+                command: () => {
+                    setNewNodeType('file');
+                    openAddDialog();
+                }
             }
-        },
-        {
-            label: 'Thêm file',
-            icon: 'pi pi-file-plus',
-            command: () => {
-                setNewNodeType('file');
-                openAddDialog();
+        ];
+
+        const actionItems: MenuItem[] = [
+            {
+                label: 'Sửa',
+                icon: 'pi pi-pencil',
+                command: openEditDialog
+            },
+            {
+                label: 'Xóa',
+                icon: 'pi pi-trash',
+                command: confirmDelete
             }
-        },
-        {
-            label: 'Sửa',
-            icon: 'pi pi-pencil',
-            command: openEditDialog
-        },
-        {
-            label: 'Xóa',
-            icon: 'pi pi-trash',
-            command: confirmDelete
-        }
-    ];
+        ];
+
+        return contextMenuType === 'file' ? actionItems : [...additionItems, ...actionItems];
+    }, [contextMenuType, openAddDialog, openEditDialog, confirmDelete]);
 
     // Update selected node when selection changes
     useEffect(() => {
