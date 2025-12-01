@@ -9,7 +9,7 @@ import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { addDataToFirebase, getDataFromFirebase, updateDataToFirebase, deleteDataFromFirebase, uploadFile, deleteFile, readFileAsString } from '../firebase';
+//import { addDataToFirebase, getDataFromFirebase, updateDataToFirebase, deleteDataFromFirebase, uploadFile, deleteFile, readFileAsString } from '../firebase';
 import { getAllItems, addManyItems, clearAllItems } from "../indexedDB";
 
 interface TreeNode {
@@ -56,7 +56,7 @@ export const TreeDemo = () => {
             let items = await getAllItems(DB_NAME, STORE_NAME);
 
             if(!items || items.length <= 0) {
-                items = await getDataFromFirebase(STORE_NAME);
+                //items = await getDataFromFirebase(STORE_NAME);
 
                 await addManyItems(items, DB_NAME, STORE_NAME);
             }
@@ -250,8 +250,8 @@ export const TreeDemo = () => {
         }
 
         (async () => {
-            const content = await readFileAsString(fullPath);
-            setCurrentFileContent(content);
+            //const content = await readFileAsString(fullPath);
+            //setCurrentFileContent(content);
         })();
     }, [selectedTreeNodeKeys, treeNodes, itemDocuments]);
 
@@ -298,7 +298,7 @@ export const TreeDemo = () => {
             parentKey: selectedKey,
         };
 
-        addDataToFirebase(newNodeData, STORE_NAME);
+        //addDataToFirebase(newNodeData, STORE_NAME);
 
         clearAllItems(DB_NAME, STORE_NAME);
 
@@ -351,7 +351,7 @@ export const TreeDemo = () => {
 
         item.label = editNodeName;
 
-        updateDataToFirebase(item.id, item, STORE_NAME);
+        //updateDataToFirebase(item.id, item, STORE_NAME);
 
         clearAllItems(DB_NAME, STORE_NAME);
 
@@ -402,14 +402,14 @@ export const TreeDemo = () => {
 
         let item = itemDocuments.find(m => m.key === selectedKey);
 
-        deleteDataFromFirebase(item.id, STORE_NAME);
+        //deleteDataFromFirebase(item.id, STORE_NAME);
 
         clearAllItems(DB_NAME, STORE_NAME);
 
         if (item.type === "file") {
             let fullPath = getSelectedFullPath();
 
-            deleteFile(fullPath);
+            //deleteFile(fullPath);
         }
 
         setSelectedTreeNodeKeys(null);
@@ -494,7 +494,7 @@ export const TreeDemo = () => {
 
             let fullPath = getSelectedFullPath();
 
-            uploadFile(currentFileContent, fullPath);
+            //uploadFile(currentFileContent, fullPath);
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
         }
@@ -551,7 +551,7 @@ export const TreeDemo = () => {
         const newKey = `${parentKey}-${Date.now()}`;
 
         try {
-            await uploadFile(file, filePath);
+            //await uploadFile(file, filePath);
 
             const newNode: TreeNode = {
                 key: newKey,
@@ -579,7 +579,7 @@ export const TreeDemo = () => {
                 parentKey
             };
 
-            await addDataToFirebase(newNodeData, STORE_NAME);
+            //await addDataToFirebase(newNodeData, STORE_NAME);
 
             clearAllItems(DB_NAME, STORE_NAME);
 
