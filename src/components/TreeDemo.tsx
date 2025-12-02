@@ -9,7 +9,6 @@ import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-//import { deleteDataFromFirebase, uploadFile, deleteFile, readFileAsString } from '../firebase';
 import httpClient from "../utils/htttpClient";
 
 interface TreeNode {
@@ -143,8 +142,7 @@ export const TreeDemo = () => {
         return null;
     };
 
-    // Helper: lấy full path (ví dụ: documents/ApiGateway/cleanup.sh) từ key đang chọn
-    const getSelectedFullPath = (targetKey?: string): string | null => {
+    const getSelectedFullPath = (targetKey?: string): any => {
         const selectedKey = targetKey ?? getSelectedKey();
         if (!selectedKey) {
             return null;
@@ -171,7 +169,7 @@ export const TreeDemo = () => {
         if (segments.length === 0) {
             const labelPath = findLabelPathByKey(treeNodes, selectedKey);
             if (labelPath && labelPath.length > 1) {
-                return [STORE_NAME, ...labelPath.slice(1)].join('/');
+                return [STORE_NAME, ...labelPath.slice(1)].join('.');
             }
             return STORE_NAME;
         }
@@ -179,7 +177,7 @@ export const TreeDemo = () => {
         // Thêm tên store "documents" ở đầu cho đúng format ví dụ
         segments.push(STORE_NAME);
 
-        return segments.reverse().join('/');
+        return segments.reverse().join('.');
     };
 
     // Helper function to update tree nodes
@@ -243,8 +241,9 @@ export const TreeDemo = () => {
         }
 
         (async () => {
-            //const content = await readFileAsString(fullPath);
-            //setCurrentFileContent(content);
+            let content = await httpClient.getFile(`file/download?filepath=${fullPath.replaceAll(".", "___").replace(/___(?=[^___]*$)/, ".")}`, true);
+
+            setCurrentFileContent(content);
         })();
     }, [selectedTreeNodeKeys, treeNodes, itemDocuments]);
 
@@ -341,7 +340,6 @@ export const TreeDemo = () => {
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật tên', life: 3000 });
     };
 
-    // Handle delete node
     const handleDeleteNode = () => {
         const selectedKey = getSelectedKey();
         if (!selectedKey) {
@@ -380,7 +378,7 @@ export const TreeDemo = () => {
         if (item.type === "file") {
             let fullPath = getSelectedFullPath();
 
-            //deleteFile(fullPath);
+            httpClient.getMethod(`file/delete?param=${fullPath.replaceAll(".", "___").replace(/___(?=[^___]*$)/, ".")}`);
         }
 
         setSelectedTreeNodeKeys(null);
@@ -442,7 +440,6 @@ export const TreeDemo = () => {
         }
     };
 
-    // Confirm delete
     const confirmDelete = () => {
         const selectedKey = getSelectedKey();
         if (!selectedKey) {
@@ -458,6 +455,20 @@ export const TreeDemo = () => {
         });
     };
 
+    function splitString(str: any) {
+        // Tìm vị trí dấu chấm cuối cùng trong chuỗi
+        const lastDotIndex = str.lastIndexOf('.');
+    
+        // Tìm dấu chấm trước dấu chấm cuối cùng để tách
+        const secondLastDotIndex = str.lastIndexOf('.', lastDotIndex - 1);
+    
+        // Tách chuỗi thành 2 phần
+        const part1 = str.substring(0, secondLastDotIndex); // phần trước dấu chấm thứ hai cuối cùng
+        const part2 = str.substring(secondLastDotIndex + 1); // phần sau dấu chấm cuối cùng
+    
+        return [part1, part2];
+    }
+
     // Save file content
     const handleSaveFileContent = () => {
         const selectedKey = getSelectedKey();
@@ -465,7 +476,9 @@ export const TreeDemo = () => {
 
             let fullPath = getSelectedFullPath();
 
-            //uploadFile(currentFileContent, fullPath);
+            let data = splitString(fullPath);
+
+            httpClient.uploadFile("file/upload", data[0], data[1], currentFileContent);
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
         }
@@ -518,11 +531,10 @@ export const TreeDemo = () => {
         }
 
         const folderPath = getSelectedFullPath(parentKey) || STORE_NAME;
-        const filePath = `${folderPath}/${file.name}`;
         const newKey = `${parentKey}-${Date.now()}`;
 
         try {
-            //await uploadFile(file, filePath);
+            await httpClient.uploadFile("file/upload", folderPath, file.name, file);
 
             const newNode: TreeNode = {
                 key: newKey,
