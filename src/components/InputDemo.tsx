@@ -43,6 +43,7 @@ export const InputDemo = () => {
     const [selectButtonValue1, setSelectButtonValue1] = useState<any>(null);
     const [selectButtonValue2, setSelectButtonValue2] = useState<any>(null);
     const [inputGroupValue, setInputGroupValue] = useState<boolean>(false);
+    const [apiGatewayEndpoint, setApiGatewayEndpoint] = useState<string>('');
 
     const listboxValues = [
         { name: 'New York', code: 'NY' },
@@ -88,6 +89,12 @@ export const InputDemo = () => {
     useEffect(() => {
         const countryService = new CountryService();
         countryService.getCountries().then(data => setAutoValue(data));
+        
+        // Load API Gateway endpoint from localStorage
+        const savedEndpoint = localStorage.getItem('apiGatewayEndpoint');
+        if (savedEndpoint) {
+            setApiGatewayEndpoint(savedEndpoint);
+        }
     }, []);
 
     const searchCountry = (event: any) => {
@@ -135,22 +142,37 @@ export const InputDemo = () => {
         return 'Select Countries';
     };
 
-    const cauHinhAws: any = () => {
+    const cauHinhEndpoint: any = () => {
+        const handleSaveEndpoint = () => {
+            if (apiGatewayEndpoint.trim()) {
+                localStorage.setItem('apiGatewayEndpoint', apiGatewayEndpoint);
+                alert('Đã lưu endpoint API Gateway thành công!');
+            } else {
+                alert('Vui lòng nhập endpoint API Gateway!');
+            }
+        };
 
         return (
             <>
-                <h5>Tạo cấu hình Aws</h5>
+                <h5>Tạo API Gateway</h5>
                 <div className="p-grid p-formgrid">
                     <div className="p-col-12 p-mb-12 p-lg-12 p-mb-lg-12">
-                        <InputText type="text" placeholder="Data"></InputText>
+                        <InputText 
+                            type="text" 
+                            placeholder="Nhập endpoint API Gateway" 
+                            value={apiGatewayEndpoint}
+                            onChange={(e) => setApiGatewayEndpoint(e.target.value)}
+                        />
                     </div>
                 </div>
                 <div className="p-col-12">
                     <div className="card">
-                        <Button label="" className="p-mr-2 p-mb-2">Gửi</Button>
+                        <Button 
+                            label="Gửi" 
+                            className="p-mr-2 p-mb-2"
+                            onClick={handleSaveEndpoint}
+                        />
                         <h4></h4>
-                    
-
                     </div>
                 </div>
             </>
@@ -168,7 +190,7 @@ export const InputDemo = () => {
 
                 
 
-                    {cauHinhAws()}
+                    {cauHinhEndpoint()}
                     <h5>Icons</h5>
                     <div className="p-grid p-formgrid">
                         <div className="p-col-12 p-mb-2 p-lg-4 p-mb-lg-0">
