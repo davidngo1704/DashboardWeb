@@ -9,8 +9,8 @@ import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-//import { addDataToFirebase, getDataFromFirebase, updateDataToFirebase, deleteDataFromFirebase, uploadFile, deleteFile, readFileAsString } from '../firebase';
-import { getAllItems, addManyItems, clearAllItems } from "../indexedDB";
+//import { deleteDataFromFirebase, uploadFile, deleteFile, readFileAsString } from '../firebase';
+import httpClient from "../utils/htttpClient";
 
 interface TreeNode {
     key: string;
@@ -27,7 +27,6 @@ interface PersistedNode {
     parentKey?: string;
 }
 
-const DB_NAME = "daint_app_db";
 const STORE_NAME = "documents";
 
 export const TreeDemo = () => {
@@ -35,7 +34,6 @@ export const TreeDemo = () => {
     const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
     const [selectedTreeNodeKeys, setSelectedTreeNodeKeys] = useState<string | { [key: string]: boolean } | null>(null);
     const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
-    const [fileContents, setFileContents] = useState<{ [key: string]: string }>({});
     const [currentFileContent, setCurrentFileContent] = useState<any>('');
     const [addDialog, setAddDialog] = useState(false);
     const [editDialog, setEditDialog] = useState(false);
@@ -53,13 +51,8 @@ export const TreeDemo = () => {
 
     useEffect(() => {
         (async () => {
-            let items = await getAllItems(DB_NAME, STORE_NAME);
 
-            if(!items || items.length <= 0) {
-                //items = await getDataFromFirebase(STORE_NAME);
-
-                await addManyItems(items, DB_NAME, STORE_NAME);
-            }
+            let items = await httpClient.getMethod("fast-api/document");
 
             setItemDocuments(items);
           
@@ -298,9 +291,7 @@ export const TreeDemo = () => {
             parentKey: selectedKey,
         };
 
-        //addDataToFirebase(newNodeData, STORE_NAME);
-
-        clearAllItems(DB_NAME, STORE_NAME);
+        httpClient.postMethod("fast-api/document", newNodeData);
 
         setTreeNodes(prevNodes => {
             return updateTreeNodes(prevNodes, selectedKey, (node) => {
@@ -310,14 +301,6 @@ export const TreeDemo = () => {
                 };
             });
         });
-
-        // Initialize empty content for new files
-        if (newNodeType === 'file') {
-            setFileContents(prev => ({
-                ...prev,
-                [newKey]: ''
-            }));
-        }
 
         setNewNodeName('');
         setAddDialog(false);
@@ -351,9 +334,7 @@ export const TreeDemo = () => {
 
         item.label = editNodeName;
 
-        //updateDataToFirebase(item.id, item, STORE_NAME);
-
-        clearAllItems(DB_NAME, STORE_NAME);
+        httpClient.putMethod(`fast-api/document/${item.id}`, item);
 
         setEditNodeName('');
         setEditDialog(false);
@@ -379,20 +360,12 @@ export const TreeDemo = () => {
 
         // Remove file content if it's a file
         if (!node.children) {
-            setFileContents(prev => {
-                const newContents = { ...prev };
-                delete newContents[selectedKey];
-                return newContents;
-            });
+     
         } else {
             // Remove all file contents for children recursively
             const removeChildrenContents = (node: TreeNode) => {
                 if (!node.children) {
-                    setFileContents(prev => {
-                        const newContents = { ...prev };
-                        delete newContents[node.key];
-                        return newContents;
-                    });
+             
                 } else {
                     node.children.forEach((child: TreeNode) => removeChildrenContents(child));
                 }
@@ -402,9 +375,7 @@ export const TreeDemo = () => {
 
         let item = itemDocuments.find(m => m.key === selectedKey);
 
-        //deleteDataFromFirebase(item.id, STORE_NAME);
-
-        clearAllItems(DB_NAME, STORE_NAME);
+        httpClient.deleteMethod(`fast-api/document/${item.id}`);
 
         if (item.type === "file") {
             let fullPath = getSelectedFullPath();
@@ -567,11 +538,6 @@ export const TreeDemo = () => {
                 }));
             });
 
-            setFileContents(prev => ({
-                ...prev,
-                [newKey]: ''
-            }));
-
             const newNodeData = {
                 key: newKey,
                 label: file.name,
@@ -579,9 +545,7 @@ export const TreeDemo = () => {
                 parentKey
             };
 
-            //await addDataToFirebase(newNodeData, STORE_NAME);
-
-            clearAllItems(DB_NAME, STORE_NAME);
+            httpClient.postMethod("fast-api/document", newNodeData);
 
             setItemDocuments(prev => [...prev, newNodeData]);
 
