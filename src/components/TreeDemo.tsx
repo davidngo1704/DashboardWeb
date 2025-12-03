@@ -632,7 +632,7 @@ export const TreeDemo = () => {
             />
 
             <div className="p-grid">
-                <div className="p-col-3">
+                <div className="p-col-12 p-md-3 p-lg-2">
                     <div className="card">
                         <div onContextMenu={handleContextMenu}>
                             <Tree
@@ -646,8 +646,8 @@ export const TreeDemo = () => {
                         </div>
                     </div>
                 </div>
-                <div className="p-col-9">
-                    <div className="card">
+                <div className="p-col-12 p-md-9 p-lg-10">
+                    <div className="card" >
                         {selectedNode ? (
                             <>
                                 <h5>
@@ -656,12 +656,19 @@ export const TreeDemo = () => {
                                         : 'Thông tin: ' + selectedNode.label}
                                 </h5>
                                 {(!selectedNode.children && (selectedNode.icon === 'pi pi-fw pi-file' || !selectedNode.icon || selectedNode.icon.includes('file'))) ? (
-                                    <div>
+                                    <div style={{ width: '100%', height: '100%' }}>
                                         <InputTextarea
                                             value={currentFileContent}
                                             onChange={(e) => setCurrentFileContent(e.target.value)}
                                             rows={20}
-                                            style={{ width: '100%', fontFamily: 'monospace' }}
+                                            style={{ 
+                                                width: '100%',
+                                                height: '100%',
+                                                fontFamily: 'monospace', 
+                                                maxWidth: '100%',
+                                                maxHeight: '100%',
+                                                boxSizing: 'border-box' 
+                                            }}
                                             placeholder="Nhập nội dung file..."
                                         />
                                         <div style={{ marginTop: '1rem' }}>
