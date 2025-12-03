@@ -632,7 +632,7 @@ export const TreeDemo = () => {
             />
 
             <div className="p-grid">
-                <div className="p-col-12 p-md-3 p-lg-2">
+                <div className="p-col-12 p-md-4 p-lg-3">
                     <div className="card">
                         <div onContextMenu={handleContextMenu}>
                             <Tree
@@ -646,28 +646,28 @@ export const TreeDemo = () => {
                         </div>
                     </div>
                 </div>
-                <div className="p-col-12 p-md-9 p-lg-10">
-                    <div className="card" >
+                <div className="p-col-12 p-md-8 p-lg-9">
+                    <div className="card" style={{ minHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                         {selectedNode ? (
                             <>
-                                <h5>
+                                <h5 style={{ marginTop: 0, marginBottom: '1rem', flexShrink: 0 }}>
                                     {selectedNode.icon === 'pi pi-fw pi-file' || (!selectedNode.children && selectedNode.icon !== 'pi pi-fw pi-folder')
                                         ? 'Nội dung file: ' + selectedNode.label
                                         : 'Thông tin: ' + selectedNode.label}
                                 </h5>
                                 {(!selectedNode.children && (selectedNode.icon === 'pi pi-fw pi-file' || !selectedNode.icon || selectedNode.icon.includes('file'))) ? (
-                                    <div style={{ width: '100%', height: '100%' }}>
+                                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
                                         <InputTextarea
                                             value={currentFileContent}
                                             onChange={(e) => setCurrentFileContent(e.target.value)}
                                             rows={20}
                                             style={{ 
                                                 width: '100%',
-                                                height: '100%',
+                                                height: 'calc(90vh - 10rem)',
                                                 fontFamily: 'monospace', 
                                                 maxWidth: '100%',
-                                                maxHeight: '100%',
-                                                boxSizing: 'border-box' 
+                                                boxSizing: 'border-box',
+                                                resize: 'vertical'
                                             }}
                                             placeholder="Nhập nội dung file..."
                                         />
