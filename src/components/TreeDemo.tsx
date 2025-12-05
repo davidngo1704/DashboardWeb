@@ -51,6 +51,8 @@ export const TreeDemo = () => {
     const [draggedNodeKey, setDraggedNodeKey] = useState<string | null>(null);
     const [dragOverNodeKey, setDragOverNodeKey] = useState<string | null>(null);
     const dragStartNodeRef = useRef<string | null>(null);
+    const [terminalVisible, setTerminalVisible] = useState<boolean>(true);
+    const [terminalCollapsed, setTerminalCollapsed] = useState<boolean>(false);
     
 
     useEffect(() => {
@@ -1033,11 +1035,55 @@ export const TreeDemo = () => {
                 </div>
             </div>
 
-            <div className="terminal-demo">
-                <div className="card">
-                    <Terminal welcomeMessage="JARVIS xin chào" prompt="root $" />
+            {/* Dockable Terminal */}
+            {terminalVisible ? (
+                <div
+                    className="terminal-dock"
+                    style={{
+                        position: 'fixed',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 1100,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        pointerEvents: 'auto'
+                    }}
+                >
+                    <div
+                        className="card"
+                        style={{
+                            width: '100%',
+                            maxWidth: '1200px',
+                            boxShadow: '0 0 10px rgba(0,0,0,0.15)',
+                            borderRadius: '6px 6px 0 0',
+                            overflow: 'hidden',
+                            height: terminalCollapsed ? '40px' : '320px',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#f4f4f4', borderBottom: '1px solid #e6e6e6' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <strong>Terminal</strong>
+                                <span style={{ color: '#666', fontSize: '0.9rem' }}>JARVIS</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <Button icon={terminalCollapsed ? 'pi pi-window-maximize' : 'pi pi-window-minimize'} className="p-button-text p-button-sm" onClick={() => setTerminalCollapsed(prev => !prev)} aria-label={terminalCollapsed ? 'Mở rộng' : 'Thu nhỏ'} />
+                                <Button icon="pi pi-times" className="p-button-text p-button-sm" onClick={() => setTerminalVisible(false)} aria-label="Đóng" />
+                            </div>
+                        </div>
+
+                        <div style={{ flex: terminalCollapsed ? '0 0 0' : '1 1 auto', overflow: 'auto', display: terminalCollapsed ? 'none' : 'block' }}>
+                            <Terminal welcomeMessage="JARVIS xin chào" prompt="root $" />
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 1100 }}>
+                    <Button icon="pi pi-terminal" className="p-button-rounded p-button-primary" onClick={() => { setTerminalVisible(true); setTerminalCollapsed(false); }} aria-label="Mở Terminal" />
+                </div>
+            )}
 
             {/* Add Dialog */}
             <Dialog
