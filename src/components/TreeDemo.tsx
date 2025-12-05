@@ -11,6 +11,7 @@ import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import httpClient from "../utils/htttpClient";
 import { Terminal } from 'primereact/terminal';
+import { TerminalService } from 'primereact/terminalservice';
 import './style.css';
 
 interface TreeNode {
@@ -31,6 +32,38 @@ interface PersistedNode {
 const STORE_NAME = "documents";
 
 export const TreeDemo = () => {
+
+    const commandHandler = async (text: any) => {
+        let response;
+        let argsIndex = text.indexOf(' ');
+        let command = argsIndex !== -1 ? text.substring(0, argsIndex) : text;
+
+        switch (command) {
+     
+            case 'clear':
+                response = null;
+                break;
+
+            default:
+                response = 'Unknown command: ' + command;
+                break;
+        }
+
+        if (response) {
+            TerminalService.emit('response', response);
+        }
+        else {
+            TerminalService.emit('clear');
+        }
+    }
+
+    useEffect(() => {
+        TerminalService.on('command', commandHandler);
+        return () => {
+            TerminalService.off('command', commandHandler);
+        }
+    }, [])
+
 
     const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
     const [selectedTreeNodeKeys, setSelectedTreeNodeKeys] = useState<string | { [key: string]: boolean } | null>(null);
@@ -53,7 +86,7 @@ export const TreeDemo = () => {
     const dragStartNodeRef = useRef<string | null>(null);
     const [terminalVisible, setTerminalVisible] = useState<boolean>(true);
     const [terminalCollapsed, setTerminalCollapsed] = useState<boolean>(false);
-    
+
 
     useEffect(() => {
         (async () => {
@@ -61,7 +94,7 @@ export const TreeDemo = () => {
             let items = await httpClient.getMethod("fast-api/document");
 
             setItemDocuments(items);
-          
+
             setTreeNodes(buildTreeFromItems(items as PersistedNode[]));
         })();
 
@@ -225,25 +258,25 @@ export const TreeDemo = () => {
         // Walk up the parent chain to see if ancestorKey is in the path
         let currentItem = itemDocuments.find(m => m.key === nodeKey);
         const visitedKeys = new Set<string>();
-        
+
         while (currentItem && currentItem.parentKey) {
             // Prevent infinite loops
             if (visitedKeys.has(currentItem.key)) {
                 break;
             }
             visitedKeys.add(currentItem.key);
-            
+
             if (currentItem.parentKey === ancestorKey) {
                 return true;
             }
-            
+
             if (currentItem.parentKey === '0') {
                 break;
             }
-            
+
             currentItem = itemDocuments.find(m => m.key === currentItem.parentKey);
         }
-        
+
         return false;
     };
 
@@ -272,7 +305,7 @@ export const TreeDemo = () => {
     // Helper function to remove node from tree structure and return it
     const extractNodeFromTree = (nodes: TreeNode[], key: string): { extractedNode: TreeNode | null, updatedNodes: TreeNode[] } => {
         let extracted: TreeNode | null = null;
-        
+
         const removeAndExtract = (nodeList: TreeNode[]): TreeNode[] => {
             return nodeList.filter(node => {
                 if (node.key === key) {
@@ -360,7 +393,7 @@ export const TreeDemo = () => {
 
             // Add node to new location
             let newTreeNodes = addNodeToTree(updatedNodes, newParentKey, extractedNode);
-            
+
             // Update tree state
             setTreeNodes(newTreeNodes);
 
@@ -369,13 +402,13 @@ export const TreeDemo = () => {
             if (draggedItem && draggedItem.id) {
                 // Update the dragged item's parentKey
                 const updatedItem = { ...draggedItem, parentKey: newParentKey };
-                
+
                 // Update in database
                 await httpClient.putMethod(`fast-api/document/${draggedItem.id}`, updatedItem);
 
                 // Update itemDocuments state
                 setItemDocuments(prev => {
-                    return prev.map(item => 
+                    return prev.map(item =>
                         item.key === draggedKey ? updatedItem : item
                     );
                 });
@@ -405,7 +438,7 @@ export const TreeDemo = () => {
         dragStartNodeRef.current = nodeKey;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', nodeKey);
-        
+
         // Add visual feedback
         if (e.currentTarget instanceof HTMLElement) {
             e.currentTarget.style.opacity = '0.5';
@@ -455,7 +488,7 @@ export const TreeDemo = () => {
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX;
         const y = e.clientY;
-        
+
         if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
             setDragOverNodeKey(null);
         }
@@ -548,7 +581,7 @@ export const TreeDemo = () => {
         })();
     }, [selectedTreeNodeKeys, treeNodes, itemDocuments]);
 
-    
+
     // Handle add node
     const handleAddNode = () => {
         if (!newNodeName.trim()) {
@@ -659,12 +692,12 @@ export const TreeDemo = () => {
 
         // Remove file content if it's a file
         if (!node.children) {
-     
+
         } else {
             // Remove all file contents for children recursively
             const removeChildrenContents = (node: TreeNode) => {
                 if (!node.children) {
-             
+
                 } else {
                     node.children.forEach((child: TreeNode) => removeChildrenContents(child));
                 }
@@ -759,14 +792,14 @@ export const TreeDemo = () => {
     function splitString(str: any) {
         // Tìm vị trí dấu chấm cuối cùng trong chuỗi
         const lastDotIndex = str.lastIndexOf('.');
-    
+
         // Tìm dấu chấm trước dấu chấm cuối cùng để tách
         const secondLastDotIndex = str.lastIndexOf('.', lastDotIndex - 1);
-    
+
         // Tách chuỗi thành 2 phần
         const part1 = str.substring(0, secondLastDotIndex); // phần trước dấu chấm thứ hai cuối cùng
         const part2 = str.substring(secondLastDotIndex + 1); // phần sau dấu chấm cuối cùng
-    
+
         return [part1, part2];
     }
 
@@ -957,7 +990,7 @@ export const TreeDemo = () => {
 
     return (
         <>
-   
+
 
             <Toast ref={toast} />
             <ConfirmDialog />
@@ -1000,10 +1033,10 @@ export const TreeDemo = () => {
                                             value={currentFileContent}
                                             onChange={(e) => setCurrentFileContent(e.target.value)}
                                             rows={20}
-                                            style={{ 
+                                            style={{
                                                 width: '100%',
                                                 height: 'calc(90vh - 10rem)',
-                                                fontFamily: 'monospace', 
+                                                fontFamily: 'monospace',
                                                 maxWidth: '100%',
                                                 boxSizing: 'border-box',
                                                 resize: 'vertical'
@@ -1065,18 +1098,16 @@ export const TreeDemo = () => {
                     >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#0b0b0b', borderBottom: '1px solid #222' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <strong style={{ color: '#fff' }}>Terminal</strong>
-                                <span style={{ color: '#bbb', fontSize: '0.9rem' }}>JARVIS</span>
+                                <strong style={{ color: '#fff' }}>JARVIS</strong>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button icon={terminalCollapsed ? 'pi pi-window-maximize' : 'pi pi-window-minimize'} className="p-button-text p-button-sm" onClick={() => setTerminalCollapsed(prev => !prev)} aria-label={terminalCollapsed ? 'Mở rộng' : 'Thu nhỏ'} style={{ color: '#fff' }} />
                                 <Button icon="pi pi-times" className="p-button-text p-button-sm" onClick={() => setTerminalVisible(false)} aria-label="Đóng" style={{ color: '#fff' }} />
                             </div>
                         </div>
 
                         <div style={{ flex: terminalCollapsed ? '0 0 0' : '1 1 auto', overflow: 'auto', display: terminalCollapsed ? 'none' : 'block', background: '#000', color: '#fff' }}>
                             <div style={{ height: '100%', background: '#000', color: '#fff', padding: '12px', boxSizing: 'border-box' }}>
-                                <Terminal welcomeMessage="JARVIS xin chào" prompt="root $" />
+                                <Terminal prompt="root $" />
                             </div>
                         </div>
                     </div>
