@@ -362,7 +362,9 @@ export const TreeDemo = () => {
         setNewNodeName('');
         setAddDialog(false);
 
-        getTree();
+        setTimeout(() => {
+            getTree();
+        }, 1000);
 
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã thêm ${newNodeType === 'folder' ? 'thư mục' : 'file'}`, life: 3000 });
     };
@@ -400,7 +402,9 @@ export const TreeDemo = () => {
 
         setEditDialog(false);
         
-        getTree();
+        setTimeout(() => {
+            getTree();
+        }, 1000);
 
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật tên', life: 3000 });
     };
@@ -443,7 +447,9 @@ export const TreeDemo = () => {
         setSelectedTreeNodeKeys(null);
         setSelectedNode(null);
         setCurrentFileContent('');
-        getTree();
+        setTimeout(() => {
+            getTree();
+        }, 1000);
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã xóa node', life: 3000 });
     };
 
@@ -524,7 +530,9 @@ export const TreeDemo = () => {
 
             httpClient.uploadFile("file/upload", item.parentKey, item.label, currentFileContent);
 
-            getTree();
+            setTimeout(() => {
+                getTree();
+            }, 1000);
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
         }
@@ -602,7 +610,9 @@ export const TreeDemo = () => {
 
             setItemDocuments(prev => [...prev, newNodeData]);
 
-            getTree();
+            setTimeout(() => {
+                getTree();
+            }, 1000);
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã upload "${file.name}"`, life: 3000 });
         } catch (error) {
