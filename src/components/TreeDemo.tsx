@@ -1054,28 +1054,30 @@ export const TreeDemo = () => {
                         className="card"
                         style={{
                             width: '100%',
-                            maxWidth: '1200px',
-                            boxShadow: '0 0 10px rgba(0,0,0,0.15)',
-                            borderRadius: '6px 6px 0 0',
+                            maxWidth: '100%',
+                            boxShadow: 'none',
+                            borderRadius: '0',
                             overflow: 'hidden',
                             height: terminalCollapsed ? '40px' : '320px',
                             display: 'flex',
                             flexDirection: 'column'
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#f4f4f4', borderBottom: '1px solid #e6e6e6' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#0b0b0b', borderBottom: '1px solid #222' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <strong>Terminal</strong>
-                                <span style={{ color: '#666', fontSize: '0.9rem' }}>JARVIS</span>
+                                <strong style={{ color: '#fff' }}>Terminal</strong>
+                                <span style={{ color: '#bbb', fontSize: '0.9rem' }}>JARVIS</span>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button icon={terminalCollapsed ? 'pi pi-window-maximize' : 'pi pi-window-minimize'} className="p-button-text p-button-sm" onClick={() => setTerminalCollapsed(prev => !prev)} aria-label={terminalCollapsed ? 'Mở rộng' : 'Thu nhỏ'} />
-                                <Button icon="pi pi-times" className="p-button-text p-button-sm" onClick={() => setTerminalVisible(false)} aria-label="Đóng" />
+                                <Button icon={terminalCollapsed ? 'pi pi-window-maximize' : 'pi pi-window-minimize'} className="p-button-text p-button-sm" onClick={() => setTerminalCollapsed(prev => !prev)} aria-label={terminalCollapsed ? 'Mở rộng' : 'Thu nhỏ'} style={{ color: '#fff' }} />
+                                <Button icon="pi pi-times" className="p-button-text p-button-sm" onClick={() => setTerminalVisible(false)} aria-label="Đóng" style={{ color: '#fff' }} />
                             </div>
                         </div>
 
-                        <div style={{ flex: terminalCollapsed ? '0 0 0' : '1 1 auto', overflow: 'auto', display: terminalCollapsed ? 'none' : 'block' }}>
-                            <Terminal welcomeMessage="JARVIS xin chào" prompt="root $" />
+                        <div style={{ flex: terminalCollapsed ? '0 0 0' : '1 1 auto', overflow: 'auto', display: terminalCollapsed ? 'none' : 'block', background: '#000', color: '#fff' }}>
+                            <div style={{ height: '100%', background: '#000', color: '#fff', padding: '12px', boxSizing: 'border-box' }}>
+                                <Terminal welcomeMessage="JARVIS xin chào" prompt="root $" />
+                            </div>
                         </div>
                     </div>
                 </div>
