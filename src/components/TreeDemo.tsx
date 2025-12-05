@@ -81,6 +81,8 @@ export const TreeDemo = () => {
     const [terminalVisible, setTerminalVisible] = useState<boolean>(false);
     const [terminalCollapsed, setTerminalCollapsed] = useState<boolean>(false);
     const [prompt, setPrompt] = useState<string>("Jarvis $");
+    const [resultDialog, setResultDialog] = useState(false);
+    const [resultContent, setResultContent] = useState<string>('');
     const keyRoot: any = localStorage.getItem('rootFolder');
 
     const getTree = async () => {
@@ -533,7 +535,8 @@ export const TreeDemo = () => {
             let response = await httpClient.postMethod('linux/execute', { command: `bash ${node.key}` });
 
             if (response) {
-                alert('Kết quả:\n' + response);
+                setResultContent(response);
+                setResultDialog(true);
             }
         }
         else
@@ -897,6 +900,35 @@ export const TreeDemo = () => {
                         value={editNodeName}
                         onChange={(e) => setEditNodeName(e.target.value)}
                         autoFocus
+                    />
+                </div>
+            </Dialog>
+
+            {/* Result Dialog */}
+            <Dialog
+                visible={resultDialog}
+                style={{ width: '90vw', maxWidth: '90vw' }}
+                header="Kết quả thực thi"
+                modal
+                className="p-fluid"
+                onHide={() => setResultDialog(false)}
+                footer={
+                    <div>
+                        <Button label="Đóng" icon="pi pi-times" onClick={() => setResultDialog(false)} />
+                    </div>
+                }
+            >
+                <div>
+                    <InputTextarea
+                        value={resultContent}
+                        readOnly
+                        rows={15}
+                        style={{
+                            width: '100%',
+                            fontFamily: 'monospace',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box'
+                        }}
                     />
                 </div>
             </Dialog>
