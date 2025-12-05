@@ -35,17 +35,14 @@ export const TreeDemo = () => {
 
     const commandHandler = async (text: any) => {
         let response;
-        let argsIndex = text.indexOf(' ');
-        let command = argsIndex !== -1 ? text.substring(0, argsIndex) : text;
-
-        switch (command) {
+   
+        switch (text) {
      
             case 'clear':
                 response = null;
                 break;
-
-            default:
-                response = 'Unknown command: ' + command;
+            case 'sudo su':
+                setPrompt('root $');
                 break;
         }
 
@@ -84,8 +81,9 @@ export const TreeDemo = () => {
     const [draggedNodeKey, setDraggedNodeKey] = useState<string | null>(null);
     const [dragOverNodeKey, setDragOverNodeKey] = useState<string | null>(null);
     const dragStartNodeRef = useRef<string | null>(null);
-    const [terminalVisible, setTerminalVisible] = useState<boolean>(true);
+    const [terminalVisible, setTerminalVisible] = useState<boolean>(false);
     const [terminalCollapsed, setTerminalCollapsed] = useState<boolean>(false);
+    const [prompt, setPrompt] = useState<string>("Jarvis $");
 
 
     useEffect(() => {
@@ -1096,18 +1094,15 @@ export const TreeDemo = () => {
                             flexDirection: 'column'
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#0b0b0b', borderBottom: '1px solid #222' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <strong style={{ color: '#fff' }}>JARVIS</strong>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'revert', justifyContent: 'right', padding: '2px 4px', background: '#0b0b0b', borderBottom: '1px solid #222' }}>
+                            <div style={{ display: 'flex', gap: '2px' }}>
                                 <Button icon="pi pi-times" className="p-button-text p-button-sm" onClick={() => setTerminalVisible(false)} aria-label="Đóng" style={{ color: '#fff' }} />
                             </div>
                         </div>
 
                         <div style={{ flex: terminalCollapsed ? '0 0 0' : '1 1 auto', overflow: 'auto', display: terminalCollapsed ? 'none' : 'block', background: '#000', color: '#fff' }}>
                             <div style={{ height: '100%', background: '#000', color: '#fff', padding: '12px', boxSizing: 'border-box' }}>
-                                <Terminal prompt="root $" />
+                                <Terminal prompt={prompt} />
                             </div>
                         </div>
                     </div>
