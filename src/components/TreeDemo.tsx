@@ -84,23 +84,26 @@ export const TreeDemo = () => {
     const [terminalVisible, setTerminalVisible] = useState<boolean>(false);
     const [terminalCollapsed, setTerminalCollapsed] = useState<boolean>(false);
     const [prompt, setPrompt] = useState<string>("Jarvis $");
+    const keyRoot: any = localStorage.getItem('rootFolder');
 
+    const getTree = async () => {
 
-    useEffect(() => {
-        (async () => {
-
-            let items = await httpClient.getMethod("fast-api/document");
+            let items = await httpClient.getMethod("file/scan?filepath=" + encodeURIComponent(keyRoot || ''));
 
             setItemDocuments(items);
 
-            setTreeNodes(buildTreeFromItems(items as PersistedNode[]));
-        })();
+            let dataTree = buildTreeFromItems(items as PersistedNode[]);
 
+            setTreeNodes(dataTree);
+    }
+
+    useEffect(() => {
+        getTree();
     }, []);
 
     const buildTreeFromItems = (items: PersistedNode[]): TreeNode[] => {
         const rootNode: TreeNode = {
-            key: "0",
+            key: keyRoot,
             label: "Tài liệu",
             data: "RootFolder",
             icon: "pi pi-home",
@@ -123,7 +126,7 @@ export const TreeDemo = () => {
             const node = nodeMap.get(item.key);
             if (!node) return;
 
-            if (!item.parentKey || item.parentKey === '0') {
+            if (!item.parentKey || item.parentKey === keyRoot) {
                 rootNode.children?.push(node);
                 return;
             }
@@ -186,8 +189,8 @@ export const TreeDemo = () => {
             return null;
         }
 
-        if (selectedKey === '0') {
-            return STORE_NAME;
+        if (selectedKey === keyRoot) {
+            return keyRoot;
         }
 
         const segments: string[] = [];
@@ -196,8 +199,7 @@ export const TreeDemo = () => {
         while (currentItem) {
             segments.push(currentItem.label);
 
-            // Dừng khi đã tới root (parentKey rỗng hoặc '0')
-            if (!currentItem.parentKey || currentItem.parentKey === '0') {
+            if (!currentItem.parentKey || currentItem.parentKey === keyRoot) {
                 break;
             }
 
@@ -268,7 +270,7 @@ export const TreeDemo = () => {
                 return true;
             }
 
-            if (currentItem.parentKey === '0') {
+            if (currentItem.parentKey === keyRoot) {
                 break;
             }
 
@@ -276,28 +278,6 @@ export const TreeDemo = () => {
         }
 
         return false;
-    };
-
-    // Helper function to find parent node key by child key
-    const findParentKey = (childKey: string): string | null => {
-        const item = itemDocuments.find(m => m.key === childKey);
-        return item?.parentKey || null;
-    };
-
-    // Helper function to get all children keys recursively
-    const getAllChildrenKeys = (parentKey: string): string[] => {
-        const children: string[] = [];
-        const findChildren = (key: string) => {
-            const childItems = itemDocuments.filter(item => item.parentKey === key);
-            childItems.forEach(item => {
-                children.push(item.key);
-                if (item.type === 'folder') {
-                    findChildren(item.key);
-                }
-            });
-        };
-        findChildren(parentKey);
-        return children;
     };
 
     // Helper function to remove node from tree structure and return it
@@ -348,7 +328,7 @@ export const TreeDemo = () => {
             return false;
         }
 
-        if (draggedKey === '0') {
+        if (draggedKey === keyRoot) {
             toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể di chuyển thư mục gốc', life: 3000 });
             return false;
         }
@@ -402,7 +382,8 @@ export const TreeDemo = () => {
                 const updatedItem = { ...draggedItem, parentKey: newParentKey };
 
                 // Update in database
-                await httpClient.putMethod(`fast-api/document/${draggedItem.id}`, updatedItem);
+
+                await httpClient.postMethod(`file/update`, updatedItem);
 
                 // Update itemDocuments state
                 setItemDocuments(prev => {
@@ -412,6 +393,9 @@ export const TreeDemo = () => {
                 });
 
                 toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã di chuyển "${draggedNode.label}"`, life: 3000 });
+
+                getTree();
+
                 return true;
             }
         } catch (error) {
@@ -428,7 +412,7 @@ export const TreeDemo = () => {
 
     // Drag and drop handlers
     const handleDragStart = (e: React.DragEvent, nodeKey: string) => {
-        if (nodeKey === '0') {
+        if (nodeKey === keyRoot) {
             e.preventDefault();
             return;
         }
@@ -573,7 +557,9 @@ export const TreeDemo = () => {
         }
 
         (async () => {
-            let content = await httpClient.getFile(`file/download?filepath=${fullPath.replaceAll(".", "___").replace(/___(?=[^___]*$)/, ".")}`, true);
+            var param = encodeURIComponent(item.key || '');
+
+            let content = await httpClient.getMethod(`file/download-text?filepath=${param}`);
 
             setCurrentFileContent(content);
         })();
@@ -622,7 +608,7 @@ export const TreeDemo = () => {
             parentKey: selectedKey,
         };
 
-        httpClient.postMethod("fast-api/document", newNodeData);
+        httpClient.postMethod(`file/add`, newNodeData);
 
         setTreeNodes(prevNodes => {
             return updateTreeNodes(prevNodes, selectedKey, (node) => {
@@ -635,6 +621,9 @@ export const TreeDemo = () => {
 
         setNewNodeName('');
         setAddDialog(false);
+
+        getTree();
+
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã thêm ${newNodeType === 'folder' ? 'thư mục' : 'file'}`, life: 3000 });
     };
 
@@ -665,10 +654,14 @@ export const TreeDemo = () => {
 
         item.label = editNodeName;
 
-        httpClient.putMethod(`fast-api/document/${item.id}`, item);
+        httpClient.postMethod(`file/update`, item);
 
         setEditNodeName('');
+
         setEditDialog(false);
+        
+        getTree();
+
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật tên', life: 3000 });
     };
 
@@ -705,17 +698,12 @@ export const TreeDemo = () => {
 
         let item = itemDocuments.find(m => m.key === selectedKey);
 
-        httpClient.deleteMethod(`fast-api/document/${item.id}`);
-
-        if (item.type === "file") {
-            let fullPath = getSelectedFullPath();
-
-            httpClient.getMethod(`file/delete?param=${fullPath.replaceAll(".", "___").replace(/___(?=[^___]*$)/, ".")}`);
-        }
+        httpClient.postMethod(`file/delete`, item);
 
         setSelectedTreeNodeKeys(null);
         setSelectedNode(null);
         setCurrentFileContent('');
+        getTree();
         toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã xóa node', life: 3000 });
     };
 
@@ -806,11 +794,11 @@ export const TreeDemo = () => {
         const selectedKey = getSelectedKey();
         if (selectedKey) {
 
-            let fullPath = getSelectedFullPath();
+            const item = itemDocuments.find(m => m.key === selectedKey);
 
-            let data = splitString(fullPath);
+            httpClient.uploadFile("file/upload", item.parentKey, item.label, currentFileContent);
 
-            httpClient.uploadFile("file/upload", data[0], data[1], currentFileContent);
+            getTree();
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu nội dung file', life: 3000 });
         }
@@ -862,14 +850,18 @@ export const TreeDemo = () => {
             return;
         }
 
-        const folderPath = getSelectedFullPath(parentKey) || STORE_NAME;
-        const newKey = `${parentKey}-${Date.now()}`;
-
         try {
-            await httpClient.uploadFile("file/upload", folderPath, file.name, file);
+            await httpClient.uploadFile("file/upload", parentKey, file.name, file);
+
+            const newNodeData = {
+                key: parentKey + '-' + file.name,
+                label: file.name,
+                type: 'file',
+                parentKey
+            };
 
             const newNode: TreeNode = {
-                key: newKey,
+                key: parentKey + '-' + file.name,
                 label: file.name,
                 data: `${file.name} File`,
                 icon: 'pi pi-fw pi-file'
@@ -882,16 +874,9 @@ export const TreeDemo = () => {
                 }));
             });
 
-            const newNodeData = {
-                key: newKey,
-                label: file.name,
-                type: 'file',
-                parentKey
-            };
-
-            httpClient.postMethod("fast-api/document", newNodeData);
-
             setItemDocuments(prev => [...prev, newNodeData]);
+
+            getTree();
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã upload "${file.name}"`, life: 3000 });
         } catch (error) {
@@ -950,7 +935,7 @@ export const TreeDemo = () => {
     const nodeTemplate = (node: TreeNode) => {
         const isDragged = draggedNodeKey === node.key;
         const isDragOver = dragOverNodeKey === node.key;
-        const isRoot = node.key === '0';
+        const isRoot = node.key === keyRoot;
         const isFolder = !!node.children || node.icon?.includes('folder') || node.icon === 'pi pi-home';
 
         return (

@@ -13,7 +13,8 @@ const getFullUrl = (url) => {
 
 async function uploadFile(url, filepath, filename, file) {
     const fullUrl = getFullUrl(url);
-    const serverUrl = `${fullUrl}?filepath=${filepath}&filename=${filename}`;
+
+    const serverUrl = `${fullUrl}?filepath=${encodeURIComponent(filepath || '')}&filename=${filename}`;
 
     try {
         let body;

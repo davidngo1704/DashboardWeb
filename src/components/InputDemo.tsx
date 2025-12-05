@@ -43,7 +43,7 @@ export const InputDemo = () => {
     const [selectButtonValue1, setSelectButtonValue1] = useState<any>(null);
     const [selectButtonValue2, setSelectButtonValue2] = useState<any>(null);
     const [inputGroupValue, setInputGroupValue] = useState<boolean>(false);
-    const [apiGatewayEndpoint, setApiGatewayEndpoint] = useState<string>('');
+    
 
     const listboxValues = [
         { name: 'New York', code: 'NY' },
@@ -86,16 +86,7 @@ export const InputDemo = () => {
         { name: 'Option 3', code: 'O3' },
     ];
 
-    useEffect(() => {
-        const countryService = new CountryService();
-        countryService.getCountries().then(data => setAutoValue(data));
-        
-        // Load API Gateway endpoint from localStorage
-        const savedEndpoint = localStorage.getItem('apiGatewayEndpoint');
-        if (savedEndpoint) {
-            setApiGatewayEndpoint(savedEndpoint);
-        }
-    }, []);
+
 
     const searchCountry = (event: any) => {
         setTimeout(() => {
@@ -142,11 +133,31 @@ export const InputDemo = () => {
         return 'Select Countries';
     };
 
+    const [apiGatewayEndpoint, setApiGatewayEndpoint] = useState<string>('');
+    const [rootFolder, setRootFolder] = useState<string>('F:\\New\\var\\lib\\ApiGateway');
+
+    useEffect(() => {
+        const countryService = new CountryService();
+        countryService.getCountries().then(data => setAutoValue(data));
+        
+        // Load API Gateway endpoint from localStorage
+        const savedEndpoint = localStorage.getItem('apiGatewayEndpoint');
+        if (savedEndpoint) {
+            setApiGatewayEndpoint(savedEndpoint);
+        }
+
+        const savedRootFolder = localStorage.getItem('rootFolder');
+        if (savedRootFolder) {
+            setRootFolder(savedRootFolder);
+        }
+    }, []);
+
     const cauHinhEndpoint: any = () => {
         const handleSaveEndpoint = () => {
             if (apiGatewayEndpoint.trim()) {
                 localStorage.setItem('apiGatewayEndpoint', apiGatewayEndpoint);
-                alert('Đã lưu endpoint API Gateway thành công!');
+                localStorage.setItem('rootFolder', rootFolder);
+                alert('thành công!');
             } else {
                 alert('Vui lòng nhập endpoint API Gateway!');
             }
@@ -162,6 +173,14 @@ export const InputDemo = () => {
                             placeholder="Nhập endpoint API Gateway" 
                             value={apiGatewayEndpoint}
                             onChange={(e) => setApiGatewayEndpoint(e.target.value)}
+                        />
+                    </div>
+                    <div className="p-col-12 p-mb-12 p-lg-12 p-mb-lg-12">
+                        <InputText 
+                            type="text"
+                            placeholder="Nhập Root Folder" 
+                            value={rootFolder}
+                            onChange={(e) => setRootFolder(e.target.value)}
                         />
                     </div>
                 </div>
