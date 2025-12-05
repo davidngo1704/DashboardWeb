@@ -34,8 +34,8 @@ const STORE_NAME = "documents";
 export const TreeDemo = () => {
 
     const commandHandler = async (text: any) => {
-        let response;
-   
+        let response = await httpClient.postMethod('linux/execute', { command: text });
+
         switch (text) {
      
             case 'clear':
@@ -521,6 +521,27 @@ export const TreeDemo = () => {
         });
     };
 
+    const confirmRun = async () => {
+        const selectedKey = getSelectedKey();
+        if (!selectedKey) {
+            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một node để xóa', life: 3000 });
+            return;
+        }
+        const node = findNodeByKey(treeNodes, selectedKey);
+     
+        if(node && node.key.endsWith('.sh')){
+            let response = await httpClient.postMethod('linux/execute', { command: `bash ${node.key}` });
+
+            if (response) {
+                alert('Kết quả:\n' + response);
+            }
+        }
+        else
+        {
+            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể chạy file .sh', life: 3000 });
+        }
+    };
+
     // Save file content
     const handleSaveFileContent = () => {
         const selectedKey = getSelectedKey();
@@ -661,6 +682,11 @@ export const TreeDemo = () => {
                 label: 'Xóa',
                 icon: 'pi pi-trash',
                 command: confirmDelete
+            },
+            {
+                label: 'Chạy',
+                icon: 'pi pi-forward',
+                command: confirmRun
             }
         ];
 
