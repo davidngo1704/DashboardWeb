@@ -10,6 +10,8 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import httpClient from "../utils/htttpClient";
+import { Terminal } from 'primereact/terminal';
+import './style.css';
 
 interface TreeNode {
     key: string;
@@ -953,6 +955,8 @@ export const TreeDemo = () => {
 
     return (
         <>
+   
+
             <Toast ref={toast} />
             <ConfirmDialog />
             <ContextMenu model={contextMenuItems} ref={contextMenu} />
@@ -1026,6 +1030,12 @@ export const TreeDemo = () => {
                             <p>Chọn một file hoặc thư mục để xem chi tiết</p>
                         )}
                     </div>
+                </div>
+            </div>
+
+            <div className="terminal-demo">
+                <div className="card">
+                    <Terminal welcomeMessage="JARVIS xin chào" prompt="root $" />
                 </div>
             </div>
 
