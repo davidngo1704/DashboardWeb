@@ -78,9 +78,6 @@ export const TreeDemo = () => {
     const [itemDocuments, setItemDocuments] = useState<any[]>([]);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const uploadTargetKeyRef = useRef<string | null>(null);
-    const [draggedNodeKey, setDraggedNodeKey] = useState<string | null>(null);
-    const [dragOverNodeKey, setDragOverNodeKey] = useState<string | null>(null);
-    const dragStartNodeRef = useRef<string | null>(null);
     const [terminalVisible, setTerminalVisible] = useState<boolean>(false);
     const [terminalCollapsed, setTerminalCollapsed] = useState<boolean>(false);
     const [prompt, setPrompt] = useState<string>("Jarvis $");
@@ -248,59 +245,7 @@ export const TreeDemo = () => {
             return true;
         });
     };
-
-    // Helper function to check if a node is a descendant of another node
-    const isDescendantOf = (nodeKey: string, ancestorKey: string): boolean => {
-        if (nodeKey === ancestorKey) {
-            return true;
-        }
-
-        // Walk up the parent chain to see if ancestorKey is in the path
-        let currentItem = itemDocuments.find(m => m.key === nodeKey);
-        const visitedKeys = new Set<string>();
-
-        while (currentItem && currentItem.parentKey) {
-            // Prevent infinite loops
-            if (visitedKeys.has(currentItem.key)) {
-                break;
-            }
-            visitedKeys.add(currentItem.key);
-
-            if (currentItem.parentKey === ancestorKey) {
-                return true;
-            }
-
-            if (currentItem.parentKey === keyRoot) {
-                break;
-            }
-
-            currentItem = itemDocuments.find(m => m.key === currentItem.parentKey);
-        }
-
-        return false;
-    };
-
-    // Helper function to remove node from tree structure and return it
-    const extractNodeFromTree = (nodes: TreeNode[], key: string): { extractedNode: TreeNode | null, updatedNodes: TreeNode[] } => {
-        let extracted: TreeNode | null = null;
-
-        const removeAndExtract = (nodeList: TreeNode[]): TreeNode[] => {
-            return nodeList.filter(node => {
-                if (node.key === key) {
-                    extracted = { ...node };
-                    return false;
-                }
-                if (node.children) {
-                    node.children = removeAndExtract(node.children);
-                }
-                return true;
-            });
-        };
-
-        const updated = removeAndExtract(nodes);
-        return { extractedNode: extracted, updatedNodes: updated };
-    };
-
+    
     // Helper function to add node to tree structure
     const addNodeToTree = (nodes: TreeNode[], parentKey: string, node: TreeNode): TreeNode[] => {
         return nodes.map(n => {
@@ -318,211 +263,6 @@ export const TreeDemo = () => {
             }
             return n;
         });
-    };
-
-    // Core function to move node to new parent
-    const moveNodeToNewParent = async (draggedKey: string, newParentKey: string) => {
-        // Validate the move
-        if (draggedKey === newParentKey) {
-            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể di chuyển vào chính nó', life: 3000 });
-            return false;
-        }
-
-        if (draggedKey === keyRoot) {
-            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể di chuyển thư mục gốc', life: 3000 });
-            return false;
-        }
-
-        // Check if trying to drop into a descendant
-        if (isDescendantOf(newParentKey, draggedKey)) {
-            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể di chuyển folder vào chính con của nó', life: 3000 });
-            return false;
-        }
-
-        const targetNode = findNodeByKey(treeNodes, newParentKey);
-        if (!targetNode) {
-            toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy thư mục đích', life: 3000 });
-            return false;
-        }
-
-        // Check if target is a folder (can't drop into files)
-        if (!targetNode.children && targetNode.icon === 'pi pi-fw pi-file') {
-            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể di chuyển vào file. Vui lòng chọn thư mục', life: 3000 });
-            return false;
-        }
-
-        const draggedNode = findNodeByKey(treeNodes, draggedKey);
-        if (!draggedNode) {
-            toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy node cần di chuyển', life: 3000 });
-            return false;
-        }
-
-        // Save original tree state for rollback
-        const originalTreeNodes = JSON.parse(JSON.stringify(treeNodes));
-        const originalItemDocuments = [...itemDocuments];
-
-        try {
-            // Extract node from current location
-            const { extractedNode, updatedNodes } = extractNodeFromTree(treeNodes, draggedKey);
-            if (!extractedNode) {
-                toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tách node khỏi cây', life: 3000 });
-                return false;
-            }
-
-            // Add node to new location
-            let newTreeNodes = addNodeToTree(updatedNodes, newParentKey, extractedNode);
-
-            // Update tree state
-            setTreeNodes(newTreeNodes);
-
-            // Update itemDocuments state
-            const draggedItem = itemDocuments.find(m => m.key === draggedKey);
-            if (draggedItem && draggedItem.id) {
-                // Update the dragged item's parentKey
-                const updatedItem = { ...draggedItem, parentKey: newParentKey };
-
-                // Update in database
-
-                await httpClient.postMethod(`file/update`, updatedItem);
-
-                // Update itemDocuments state
-                setItemDocuments(prev => {
-                    return prev.map(item =>
-                        item.key === draggedKey ? updatedItem : item
-                    );
-                });
-
-                toast.current?.show({ severity: 'success', summary: 'Thành công', detail: `Đã di chuyển "${draggedNode.label}"`, life: 3000 });
-
-                getTree();
-
-                return true;
-            }
-        } catch (error) {
-            console.error('Error moving node:', error);
-            // Rollback on error
-            setTreeNodes(originalTreeNodes);
-            setItemDocuments(originalItemDocuments);
-            toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Di chuyển thất bại. Đã hoàn nguyên thay đổi.', life: 3000 });
-            return false;
-        }
-
-        return false;
-    };
-
-    // Drag and drop handlers
-    const handleDragStart = (e: React.DragEvent, nodeKey: string) => {
-        if (nodeKey === keyRoot) {
-            e.preventDefault();
-            return;
-        }
-        setDraggedNodeKey(nodeKey);
-        dragStartNodeRef.current = nodeKey;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', nodeKey);
-
-        // Add visual feedback
-        if (e.currentTarget instanceof HTMLElement) {
-            e.currentTarget.style.opacity = '0.5';
-        }
-    };
-
-    const handleDragOver = (e: React.DragEvent, nodeKey: string) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.dataTransfer.dropEffect = 'move';
-
-        if (!draggedNodeKey || draggedNodeKey === nodeKey) {
-            setDragOverNodeKey(null);
-            return;
-        }
-
-        // Validate if this is a valid drop target
-        const targetNode = findNodeByKey(treeNodes, nodeKey);
-        if (!targetNode) {
-            setDragOverNodeKey(null);
-            return;
-        }
-
-        // Can only drop into folders
-        if (!targetNode.children && targetNode.icon === 'pi pi-fw pi-file') {
-            setDragOverNodeKey(null);
-            return;
-        }
-
-        // Can't drop into itself
-        if (draggedNodeKey === nodeKey) {
-            setDragOverNodeKey(null);
-            return;
-        }
-
-        // Can't drop into descendant (can't drop parent into its child)
-        if (isDescendantOf(nodeKey, draggedNodeKey)) {
-            setDragOverNodeKey(null);
-            return;
-        }
-
-        setDragOverNodeKey(nodeKey);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        // Only clear if we're leaving the element (not entering a child)
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX;
-        const y = e.clientY;
-
-        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-            setDragOverNodeKey(null);
-        }
-    };
-
-    const handleDrop = async (e: React.DragEvent, targetNodeKey: string) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const draggedKey = draggedNodeKey || dragStartNodeRef.current;
-        if (!draggedKey || draggedKey === targetNodeKey) {
-            setDraggedNodeKey(null);
-            setDragOverNodeKey(null);
-            dragStartNodeRef.current = null;
-            return;
-        }
-
-        // Validate drop target
-        const targetNode = findNodeByKey(treeNodes, targetNodeKey);
-        if (!targetNode) {
-            setDraggedNodeKey(null);
-            setDragOverNodeKey(null);
-            dragStartNodeRef.current = null;
-            return;
-        }
-
-        // Can only drop into folders
-        if (!targetNode.children && targetNode.icon === 'pi pi-fw pi-file') {
-            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể di chuyển vào file. Vui lòng chọn thư mục', life: 3000 });
-            setDraggedNodeKey(null);
-            setDragOverNodeKey(null);
-            dragStartNodeRef.current = null;
-            return;
-        }
-
-        // Perform the move
-        await moveNodeToNewParent(draggedKey, targetNodeKey);
-
-        // Cleanup
-        setDraggedNodeKey(null);
-        setDragOverNodeKey(null);
-        dragStartNodeRef.current = null;
-    };
-
-    const handleDragEnd = (e: React.DragEvent) => {
-        // Reset visual feedback
-        if (e.currentTarget instanceof HTMLElement) {
-            e.currentTarget.style.opacity = '1';
-        }
-        setDraggedNodeKey(null);
-        setDragOverNodeKey(null);
-        dragStartNodeRef.current = null;
     };
 
     // Handle node click - show file content if it's a file
@@ -775,20 +515,6 @@ export const TreeDemo = () => {
         });
     };
 
-    function splitString(str: any) {
-        // Tìm vị trí dấu chấm cuối cùng trong chuỗi
-        const lastDotIndex = str.lastIndexOf('.');
-
-        // Tìm dấu chấm trước dấu chấm cuối cùng để tách
-        const secondLastDotIndex = str.lastIndexOf('.', lastDotIndex - 1);
-
-        // Tách chuỗi thành 2 phần
-        const part1 = str.substring(0, secondLastDotIndex); // phần trước dấu chấm thứ hai cuối cùng
-        const part2 = str.substring(secondLastDotIndex + 1); // phần sau dấu chấm cuối cùng
-
-        return [part1, part2];
-    }
-
     // Save file content
     const handleSaveFileContent = () => {
         const selectedKey = getSelectedKey();
@@ -932,40 +658,7 @@ export const TreeDemo = () => {
     }, [contextMenuType, openAddDialog, openEditDialog, confirmDelete, handleUploadFileMenuClick]);
 
     // Custom node template with drag and drop support
-    const nodeTemplate = (node: TreeNode) => {
-        const isDragged = draggedNodeKey === node.key;
-        const isDragOver = dragOverNodeKey === node.key;
-        const isRoot = node.key === keyRoot;
-        const isFolder = !!node.children || node.icon?.includes('folder') || node.icon === 'pi pi-home';
-
-        return (
-            <div
-                draggable={!isRoot}
-                onDragStart={(e) => !isRoot && handleDragStart(e, node.key)}
-                onDragOver={(e) => handleDragOver(e, node.key)}
-                onDragLeave={(e) => handleDragLeave(e)}
-                onDrop={(e) => handleDrop(e, node.key)}
-                onDragEnd={(e) => handleDragEnd(e)}
-                style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    width: '100%',
-                    padding: '2px 4px',
-                    cursor: isRoot ? 'default' : 'move',
-                    backgroundColor: isDragOver && isFolder ? '#e3f2fd' : 'transparent',
-                    border: isDragOver && isFolder ? '2px dashed #2196F3' : '2px solid transparent',
-                    borderRadius: '4px',
-                    opacity: isDragged ? 0.5 : 1,
-                    transition: 'background-color 0.2s, border 0.2s, opacity 0.2s',
-                    minHeight: '24px'
-                }}
-            >
-                <span className={node.icon} style={{ marginRight: '8px' }} />
-                <span>{node.label}</span>
-            </div>
-        );
-    };
-
+ 
     // Update selected node when selection changes
     useEffect(() => {
         handleNodeClick();
@@ -973,8 +666,6 @@ export const TreeDemo = () => {
 
     return (
         <>
-
-
             <Toast ref={toast} />
             <ConfirmDialog />
             <ContextMenu model={contextMenuItems} ref={contextMenu} />
@@ -996,7 +687,6 @@ export const TreeDemo = () => {
                                 onSelectionChange={(e) => {
                                     setSelectedTreeNodeKeys(e.value);
                                 }}
-                                nodeTemplate={nodeTemplate}
                             />
                         </div>
                     </div>
