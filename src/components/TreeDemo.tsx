@@ -797,11 +797,13 @@ export const TreeDemo = () => {
                                         />
                                         <div style={{ marginTop: '1rem' }}>
                                             <Button
+                                                style={{ margin: '0 4px' }}
                                                 label="Lưu"
                                                 icon="pi pi-save"
                                                 onClick={handleSaveFileContent}
                                             />
                                             <Button
+                                                style={{ margin: '0 4px' }}
                                                 label="Chạy"
                                                 icon="pi pi-forward"
                                                 onClick={confirmRun}
