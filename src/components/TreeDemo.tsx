@@ -652,7 +652,7 @@ export const TreeDemo = () => {
         const additionItems: MenuItem[] = [
             {
                 label: 'Thêm thư mục',
-                icon: 'pi pi-folder-plus',
+                icon: 'pi pi-envelope',
                 command: () => {
                     setNewNodeType('folder');
                     openAddDialog();
@@ -660,15 +660,31 @@ export const TreeDemo = () => {
             },
             {
                 label: 'Thêm file',
-                icon: 'pi pi-file-plus',
+                icon: 'pi pi-plus-circle',
                 command: () => {
                     setNewNodeType('file');
                     openAddDialog();
                 }
             },
             {
+                label: 'Size',
+                icon: 'pi pi-exclamation-circle',
+                command: async () => {
+                    const selectedKey = getSelectedKey();
+
+                    if (selectedKey) {
+
+                        const item = itemDocuments.find(m => m.key === selectedKey);
+
+                        let response = await httpClient.getMethod("file/size?param=" + encodeURIComponent(item.key || ''));
+
+                        toast.current?.show({ severity: 'success', summary: 'Thành công', detail: response.content, life: 3000 });
+                    }
+                }
+            },
+            {
                 label: 'Upload file',
-                icon: 'pi pi-file-plus',
+                icon: 'pi pi-upload',
                 command: () => {
                     handleUploadFileMenuClick();
                 }
@@ -676,6 +692,11 @@ export const TreeDemo = () => {
         ];
 
         const actionItems: MenuItem[] = [
+            {
+                label: 'Chạy',
+                icon: 'pi pi-forward',
+                command: confirmRun
+            },
             {
                 label: 'Sửa',
                 icon: 'pi pi-pencil',
@@ -687,10 +708,29 @@ export const TreeDemo = () => {
                 command: confirmDelete
             },
             {
-                label: 'Chạy',
-                icon: 'pi pi-forward',
-                command: confirmRun
+                label: 'Download file',
+                icon: 'pi pi-download',
+                command: async () => {
+                    const selectedKey = getSelectedKey();
+
+                    if (selectedKey) {
+
+                        const item = itemDocuments.find(m => m.key === selectedKey);
+
+                        let response = await httpClient.getFile("file/download?filepath=" + encodeURIComponent(item.key || ''));
+                        const blob = new Blob([response], { type: 'application/octet-stream' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = item.label;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(url);
+                    }
+                }
             }
+          
         ];
 
         return contextMenuType === 'file' ? actionItems : [...additionItems, ...actionItems];
@@ -921,8 +961,7 @@ export const TreeDemo = () => {
                 <div>
                     <InputTextarea
                         value={resultContent}
-                        readOnly
-                        rows={15}
+                        rows={25}
                         style={{
                             width: '100%',
                             fontFamily: 'monospace',
