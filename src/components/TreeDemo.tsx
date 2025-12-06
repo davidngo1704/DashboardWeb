@@ -801,6 +801,11 @@ export const TreeDemo = () => {
                                                 icon="pi pi-save"
                                                 onClick={handleSaveFileContent}
                                             />
+                                            <Button
+                                                label="Chạy"
+                                                icon="pi pi-forward"
+                                                onClick={confirmRun}
+                                            />
                                         </div>
                                     </div>
                                 ) : (
