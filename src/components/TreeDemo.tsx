@@ -541,7 +541,10 @@ export const TreeDemo = () => {
                 }
             }
             else if(node.key.endsWith('.py')){
-                let response = await httpClient.postMethod('linux/execute', { command: `python3 ${node.key}` });
+
+                const item = itemDocuments.find(m => m.key === selectedKey);
+
+                let response = await httpClient.postMethod('linux/execute', { command: `cd ${item.parentKey} && source venv/bin/activate && python3 ${node.label}` });
 
                 if (response) {
                     setResultContent(response);
