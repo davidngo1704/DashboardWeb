@@ -531,18 +531,38 @@ export const TreeDemo = () => {
         }
         const node = findNodeByKey(treeNodes, selectedKey);
      
-        if(node && node.key.endsWith('.sh')){
-            let response = await httpClient.postMethod('linux/execute', { command: `bash ${node.key}` });
+        if(node) {
+            if(node.key.endsWith('.sh')){
+                let response = await httpClient.postMethod('linux/execute', { command: `bash ${node.key}` });
 
-            if (response) {
-                setResultContent(response);
-                setResultDialog(true);
+                if (response) {
+                    setResultContent(response);
+                    setResultDialog(true);
+                }
+            }
+            else if(node.key.endsWith('.py')){
+                let response = await httpClient.postMethod('linux/execute', { command: `python3 ${node.key}` });
+
+                if (response) {
+                    setResultContent(response);
+                    setResultDialog(true);
+                }
+            }
+            else if(node.key.endsWith('.js')){
+                let response = await httpClient.postMethod('linux/execute', { command: `node ${node.key}` });
+
+                if (response) {
+                    setResultContent(response);
+                    setResultDialog(true);
+                }
+            }
+            else
+            {
+                toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể chạy file .sh', life: 3000 });
             }
         }
-        else
-        {
-            toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể chạy file .sh', life: 3000 });
-        }
+
+     
     };
 
     // Save file content
