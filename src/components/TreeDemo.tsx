@@ -83,6 +83,7 @@ export const TreeDemo = () => {
     const [prompt, setPrompt] = useState<string>("Jarvis $");
     const [resultDialog, setResultDialog] = useState(false);
     const [resultContent, setResultContent] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(false);
     const keyRoot: any = localStorage.getItem('rootFolder');
 
     const getTree = async () => {
@@ -532,36 +533,45 @@ export const TreeDemo = () => {
         const node = findNodeByKey(treeNodes, selectedKey);
      
         if(node) {
-            if(node.key.endsWith('.sh')){
-                let response = await httpClient.postMethod('linux/execute', { command: `bash ${node.key}` });
+            setIsLoading(true);
+            try {
+                if(node.key.endsWith('.sh')){
+                    let response = await httpClient.postMethod('linux/execute', { command: `bash ${node.key}` });
 
-                if (response) {
-                    setResultContent(response);
-                    setResultDialog(true);
+                    if (response) {
+                        setResultContent(response);
+                        setResultDialog(true);
+                    }
                 }
-            }
-            else if(node.key.endsWith('.py')){
+                else if(node.key.endsWith('.py')){
 
-                const item = itemDocuments.find(m => m.key === selectedKey);
+                    const item = itemDocuments.find(m => m.key === selectedKey);
 
-                let response = await httpClient.postMethod('linux/execute', { command: `cd ${item.parentKey} && source venv/bin/activate && python3 ${node.label}` });
+                    let response = await httpClient.postMethod('linux/execute', { command: `cd ${item.parentKey} && source venv/bin/activate && python3 ${node.label}` });
 
-                if (response) {
-                    setResultContent(response);
-                    setResultDialog(true);
+                    if (response) {
+                        setResultContent(response);
+                        setResultDialog(true);
+                    }
                 }
-            }
-            else if(node.key.endsWith('.js')){
-                let response = await httpClient.postMethod('linux/execute', { command: `node ${node.key}` });
+                else if(node.key.endsWith('.js')){
+                    let response = await httpClient.postMethod('linux/execute', { command: `node ${node.key}` });
 
-                if (response) {
-                    setResultContent(response);
-                    setResultDialog(true);
+                    if (response) {
+                        setResultContent(response);
+                        setResultDialog(true);
+                    }
                 }
-            }
-            else
-            {
-                toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể chạy file .sh', life: 3000 });
+                else
+                {
+                    toast.current?.show({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ có thể chạy file .sh', life: 3000 });
+                }
+            } catch (error: any) {
+                const errorMessage = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi thực thi file';
+                toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: errorMessage, life: 5000 });
+                console.error('Error executing file:', error);
+            } finally {
+                setIsLoading(false);
             }
         }
 
@@ -777,6 +787,43 @@ export const TreeDemo = () => {
                 style={{ display: 'none' }}
                 onChange={handleFileInputChange}
             />
+
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 2000,
+                    backdropFilter: 'blur(2px)'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '2rem',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        textAlign: 'center'
+                    }}>
+                        <div className="p-progress-spinner" style={{ width: '50px', height: '50px', margin: '0 auto 1rem' }}>
+                            <svg viewBox="0 0 100 100" style={{ animation: 'spin 2s linear infinite' }}>
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#3498db" strokeWidth="3" strokeDasharray="251.2 251.2" strokeLinecap="round" />
+                            </svg>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '1rem', color: '#333' }}>Đang xử lý...</p>
+                    </div>
+                    <style>{`
+                        @keyframes spin {
+                            to { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </div>
+            )}
 
             <div className="p-grid">
                 <div className="p-col-12 p-md-4 p-lg-3">
