@@ -104,7 +104,7 @@ export const TreeDemo = () => {
     const buildTreeFromItems = (items: PersistedNode[]): TreeNode[] => {
         const rootNode: TreeNode = {
             key: keyRoot,
-            label: "Tài liệu",
+            label: "Mã nguồn",
             data: "RootFolder",
             icon: "pi pi-home",
             children: []
