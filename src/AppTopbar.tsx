@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext } from 'react';
 import { classNames } from 'primereact/utils';
 import { MegaMenu } from 'primereact/megamenu';
 import { useHistory } from 'react-router-dom';
@@ -6,121 +6,68 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { CSSTransition } from 'react-transition-group';
 import { RTLContext } from './App';
+import httpClient from './utils/htttpClient';
 const AppTopbar = (props: any) => {
 
     const isRTL = useContext(RTLContext);
     const history = useHistory();
 
-    // Fixed for 6.1.0
-    // eslint-disable-next-line
-    const searchPanel = useRef<any>(null)
-
-    useEffect(() => {
-        // Fixed for 6.1.0
-        /*if (props.searchActive) {
-            searchPanel.current.element.focus();
-        }*/
-    }, [props.searchActive])
-
     const onInputKeydown = (event: any) => {
         const key = event.which;
 
-        //escape, tab and enter
         if (key === 27 || key === 9 || key === 13) {
             props.onSearch(false);
         }
     };
     const [model, setModel] = React.useState<any>();
+
+    function transformLinks(obj: any): any {
+        // Nếu là null hoặc không phải object thì bỏ qua
+        if (obj === null || typeof obj !== 'object') return obj;
+
+        // Nếu là mảng thì duyệt từng phần tử
+        if (Array.isArray(obj)) {
+            for (let i = 0; i < obj.length; i++) {
+                obj[i] = transformLinks(obj[i]);
+            }
+            return obj;
+        }
+
+        // Nếu là object thường
+        for (const key of Object.keys(obj)) {
+            const value = obj[key];
+
+            // Nếu key = "link"
+            if (key === "link") {
+                const path = value; // lưu lại trước khi xoá
+
+                obj.command = () => {
+                    history.push(path);
+                };
+
+                delete obj.link;
+            }
+
+            // Đệ quy nếu value vẫn là object hoặc array
+            if (value !== null && typeof value === 'object') {
+                obj[key] = transformLinks(value);
+            }
+        }
+
+        return obj;
+    }
+
     React.useEffect(() => {
         (async () => {
-            setModel(model1);
+            let dataRes = await httpClient.getMethod("file/download-text?filepath=%2Fvar%2Flib%2FApiGateway%2FConfigs%2FSystemConfig%2FFrontend%2Fmenus.json");
+
+            var data = transformLinks(JSON.parse(dataRes));
+
+            console.log("data 2 ", data);
+
+            setModel(data);
         })();
     }, []);
-    const model1 = [
-        {
-            label: 'UI KIT',
-            items: [
-                [
-                    {
-                        label: 'Trang Chủ',
-                        items: [
-                            { label: 'Trang chủ', icon: 'pi pi-fw pi-id-card', command: () => { history.push('/') } },
-                            { label: 'Text Editor', icon: 'pi pi-fw pi-check-square', command: () => { history.push('/uikit/tree') } },
-                            { label: 'Cấu hình', icon: 'pi pi-fw pi-check-square', command: () => { history.push('/uikit/input') } }
-                        ]
-                    }
-                ],
-                [
-                    {
-                        label: 'UI KIT 2',
-                        items: [
-                            { label: 'Table', icon: 'pi pi-fw pi-table', command: () => { history.push('/uikit/table') } },
-                            { label: 'List', icon: 'pi pi-fw pi-list', command: () => { history.push('/uikit/list') } },
-                            { label: 'Tree', icon: 'pi pi-fw pi-share-alt', command: () => { history.push('/uikit/tree') } },
-                            { label: 'Panel', icon: 'pi pi-fw pi-tablet', command: () => { history.push('/uikit/panel') } },
-                            { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', command: () => { history.push('/uikit/chart') } }
-                        ]
-                    }
-                ],
-                [
-                    {
-                        label: 'UI KIT 3',
-                        items: [
-                            { label: 'Overlay', icon: 'pi pi-fw pi-clone', command: () => { history.push('/uikit/overlay') } },
-                            { label: 'Menu', icon: 'pi pi-fw pi-bars', command: () => { history.push('/uikit/menu') } },
-                            { label: 'Message', icon: 'pi pi-fw pi-comment', command: () => { history.push('/uikit/message') } },
-                            { label: 'Misc', icon: 'pi pi-fw pi-circle-off', command: () => { history.push('/uikit/misc') } }
-                        ]
-                    }
-                ]
-            ]
-        },
-        {
-            label: 'UTILITIES',
-            items: [
-                [
-                    {
-                        label: 'UTILITIES 1',
-                        items: [
-                            { label: 'Display', icon: 'pi pi-fw pi-desktop', command: () => { history.push('/utilities/display') } },
-                            { label: 'Elevation', icon: 'pi pi-fw pi-external-link', command: () => { history.push('/utilities/elevation') } }
-                        ]
-                    },
-                    {
-                        label: 'UTILITIES 2',
-                        items: [
-                            { label: 'FlexBox', icon: 'pi pi-fw pi-directions', command: () => { history.push('/utilities/flexbox') } }
-                        ]
-                    }
-                ],
-                [
-                    {
-                        label: 'UTILITIES 3',
-                        items: [
-                            { label: 'Icons', icon: 'pi pi-fw pi-search', command: () => { history.push('/utilities/icons') } }
-                        ]
-                    },
-                    {
-                        label: 'UTILITIES 4',
-                        items: [
-                            { label: 'Text', icon: 'pi pi-fw pi-pencil', command: () => { history.push('/utilities/text') } },
-                            { label: 'Widgets', icon: 'pi pi-fw pi-star-o', command: () => { history.push('/utilities/widgets') } }
-                        ]
-                    }
-                ],
-                [
-                    {
-                        label: 'UTILITIES 5',
-                        items: [
-                            { label: 'Grid System', icon: 'pi pi-fw pi-th-large', command: (event: any) => { history.push('/utilities/grid') } },
-                            { label: 'Spacing', icon: 'pi pi-fw pi-arrow-right', command: (event: any) => { history.push('/utilities/spacing') } },
-                            { label: 'Typography', icon: 'pi pi-fw pi-align-center', command: (event: any) => { history.push('/utilities/typography') } }
-                        ]
-                    }
-                ],
-            ]
-        }
-    ];
 
     return (
         <div className="layout-topbar p-shadow-4">
