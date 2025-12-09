@@ -36,22 +36,17 @@ const AppTopbar = (props: any) => {
             setModel(model1);
         })();
     }, []);
-    const model1: any = [
-     
-    ];
-    const model2 = [
+    const model1 = [
         {
             label: 'UI KIT',
             items: [
                 [
                     {
-                        label: 'UI KIT 1',
+                        label: 'Trang Chủ',
                         items: [
-                            { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', command: () => { history.push('/uikit/formlayout') } },
-                            { label: 'Input', icon: 'pi pi-fw pi-check-square', command: () => { history.push('/uikit/input') } },
-                            { label: 'Float Label', icon: 'pi pi-fw pi-bookmark', command: () => { history.push('/uikit/floatlabel') } },
-                            { label: 'Button', icon: 'pi pi-fw pi-mobile', command: () => { history.push('/uikit/button') } },
-                            { label: 'File', icon: 'pi pi-fw pi-file', command: () => { history.push('/uikit/file') } }
+                            { label: 'Trang chủ', icon: 'pi pi-fw pi-id-card', command: () => { history.push('/') } },
+                            { label: 'Text Editor', icon: 'pi pi-fw pi-check-square', command: () => { history.push('/uikit/tree') } },
+                            { label: 'Cấu hình', icon: 'pi pi-fw pi-check-square', command: () => { history.push('/uikit/input') } }
                         ]
                     }
                 ],
