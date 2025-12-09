@@ -521,8 +521,6 @@ const App = () => {
 
                 <div className="layout-main">
 
-                    <AppBreadcrumb routes={routes} />
-
                     <div className="layout-content">
                         <Route path="/" exact render={() => <Dashboard colorMode={colorMode} isNewThemeLoaded={newThemeLoaded} onNewThemeChange={(e: any) => setNewThemeLoaded(e)} />} />
                         <Route path="/start/documentation" component={Documentation} />
