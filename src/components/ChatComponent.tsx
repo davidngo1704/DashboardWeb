@@ -32,20 +32,10 @@ export default function ChatComponent() {
             setChatMessages(newChatMessages);
         }
         else {
-            // Tin nhắn của assistant
-            if (newChatMessages.length === 0) {
-                // Nếu chưa có tin nhắn nào, tạo mới
-                newChatMessages.push({ 
-                    messages: [message],
-                    from: 'Trợ lý', url: 'assets/demo/images/avatar/ionibowcher.png'
-                });
-                setChatMessages(newChatMessages);
-            }
-            else {
                 let lastMessage = newChatMessages[newChatMessages.length - 1];
-                
+                console.log(newChatMessages);
                 // Nếu tin nhắn cuối cùng từ assistant, append vào
-                if (lastMessage.from === 'Trợ lý') {
+                if (lastMessage.from) {
                     lastMessage.messages.push(message);
                     setChatMessages(newChatMessages);
                 }
@@ -57,7 +47,6 @@ export default function ChatComponent() {
                     });
                     setChatMessages(newChatMessages);
                 }
-            }
         }
     }
 
