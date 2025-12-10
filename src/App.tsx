@@ -2,39 +2,38 @@ import React, { useEffect, useRef, useState } from 'react';
 import { classNames } from 'primereact/utils';
 import { Route } from 'react-router-dom'
 import AppTopbar from './AppTopbar';
-import AppBreadcrumb from "./AppBreadcrumb";
 import AppInlineMenu from './AppInlineMenu';
 import AppMenu from './AppMenu';
 import AppConfig from './AppConfig';
 import AppRightMenu from './AppRightMenu';
 import { loadThemeConfig, saveThemeConfig } from './utils/themeStorage';
-import { Dashboard } from './components/Dashboard';
-import { DashboardAnalytics } from './components/DashboardAnalytics';
-import { ButtonDemo } from './components/ButtonDemo';
-import { ChartDemo } from './components/ChartDemo';
-import { MessagesDemo } from './components/MessagesDemo';
-import { Documentation } from './components/Documentation';
-import { FileDemo } from './components/FileDemo';
-import { FormLayoutDemo } from './components/FormLayoutDemo';
-import { InputDemo } from './components/InputDemo';
-import { ListDemo } from './components/ListDemo';
-import { MiscDemo } from './components/MiscDemo';
-import { MenuDemo } from './components/MenuDemo';
-import { OverlayDemo } from './components/OverlayDemo';
-import { PanelDemo } from './components/PanelDemo';
-import { TableDemo } from './components/TableDemo';
-import { TreeDemo } from './components/TreeDemo';
-import { FloatLabelDemo } from './components/FloatLabelDemo';
-import { InvalidStateDemo } from './components/InvalidStateDemo';
-import { DisplayDemo } from './utilities/DisplayDemo';
-import { ElevationDemo } from './utilities/ElevationDemo';
-import { FlexBoxDemo } from './utilities/FlexboxDemo';
-import { GridDemo } from './utilities/GridDemo';
-import { IconsDemo } from './utilities/IconsDemo';
-import { SpacingDemo } from './utilities/SpacingDemo';
-import { TextDemo } from './utilities/TextDemo';
-import { TypographyDemo } from './utilities/TypographyDemo';
-import { WidgetsDemo } from './utilities/WidgetsDemo';
+import { Dashboard } from './pages/Dashboard';
+import { DashboardAnalytics } from './pages/DashboardAnalytics';
+import { ButtonDemo } from './pages/ButtonDemo';
+import { ChartDemo } from './pages/ChartDemo';
+import { MessagesDemo } from './pages/MessagesDemo';
+import { Documentation } from './pages/Documentation';
+import { FileDemo } from './pages/FileDemo';
+import { FormLayoutDemo } from './pages/FormLayoutDemo';
+import { InputDemo } from './pages/InputDemo';
+import { ListDemo } from './pages/ListDemo';
+import { MiscDemo } from './pages/MiscDemo';
+import { MenuDemo } from './pages/MenuDemo';
+import { OverlayDemo } from './pages/OverlayDemo';
+import { PanelDemo } from './pages/PanelDemo';
+import { TableDemo } from './pages/TableDemo';
+import { TreeDemo } from './pages/TreeDemo';
+import { FloatLabelDemo } from './pages/FloatLabelDemo';
+import { InvalidStateDemo } from './pages/InvalidStateDemo';
+import { DisplayDemo } from './pages/DisplayDemo';
+import { ElevationDemo } from './pages/ElevationDemo';
+import { FlexBoxDemo } from './pages/FlexboxDemo';
+import { GridDemo } from './pages/GridDemo';
+import { IconsDemo } from './pages/IconsDemo';
+import { SpacingDemo } from './pages/SpacingDemo';
+import { TextDemo } from './pages/TextDemo';
+import { TypographyDemo } from './pages/TypographyDemo';
+import { WidgetsDemo } from './pages/WidgetsDemo';
 import { Crud } from './pages/Crud';
 import { Calendar } from './pages/Calendar';
 import { EmptyPage } from './pages/EmptyPage';
@@ -46,6 +45,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import './App.scss';
+import httpClient from './utils/htttpClient';
 export const RTLContext = React.createContext(false);
 const App = () => {
     // Load theme config from localStorage on initial mount
@@ -76,159 +76,6 @@ const App = () => {
     let topbarItemClick: boolean;
     let menuClick: boolean;
     let inlineMenuClick: boolean;
-    const menu1 = [
-        {
-            label: 'Favorites', icon: 'pi pi-fw pi-home',
-            items: [
-                { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/', badge: '4', badgeClassName: 'p-badge-info' },
-                { label: 'Tài liệu', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
-                { label: 'Dashboard Analytics', icon: 'pi pi-fw pi-home', to: '/favorites/dashboardanalytics', badge: '2', badgeClassName: 'p-badge-success' },
-            ]
-        },
-        {
-            label: 'UI Kit', icon: 'pi pi-fw pi-star',
-            items: [
-                { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout', badge: '6', badgeClassName: 'p-badge-warning' },
-                { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input', badge: '6', badgeClassName: 'p-badge-danger' },
-                { label: 'Float Label', icon: 'pi pi-fw pi-bookmark', to: '/uikit/floatlabel' },
-                { label: 'Invalid State', icon: 'pi pi-fw pi-exclamation-circle', to: '/uikit/invalidstate' },
-                { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', className: 'rotated-icon' },
-                { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table', badge: '6', badgeClassName: 'p-badge-help' },
-                { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
-                { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
-                { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },
-                { label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/uikit/menu' },
-                { label: 'Message', icon: 'pi pi-fw pi-comment', to: '/uikit/message' },
-                { label: 'File', icon: 'pi pi-fw pi-file', to: '/uikit/file' },
-                { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/uikit/chart' },
-                { label: 'Misc', icon: 'pi pi-fw pi-circle-off', to: '/uikit/misc' },
-            ]
-        },
-        {
-            label: 'Utilities', icon: 'pi pi-fw pi-compass',
-            items: [
-                { label: 'Display', icon: 'pi pi-fw pi-desktop', to: '/utilities/display' },
-                { label: 'Elevation', icon: 'pi pi-fw pi-external-link', to: '/utilities/elevation' },
-                { label: 'Flexbox', icon: 'pi pi-fw pi-directions', to: '/utilities/flexbox' },
-                { label: 'Icons', icon: 'pi pi-fw pi-search', to: '/utilities/icons' },
-                { label: 'Widgets', icon: 'pi pi-fw pi-star-o', to: '/utilities/widgets' },
-                { label: 'Grid System', icon: 'pi pi-fw pi-th-large', to: '/utilities/grid' },
-                { label: 'Spacing', icon: 'pi pi-fw pi-arrow-right', to: '/utilities/spacing' },
-                { label: 'Typography', icon: 'pi pi-fw pi-align-center', to: '/utilities/typography' },
-                { label: 'Text', icon: 'pi pi-fw pi-pencil', to: '/utilities/text' },
-            ]
-        },
-        {
-            label: 'Pages', icon: 'pi pi-fw pi-briefcase',
-            items: [
-                { label: 'Crud', icon: 'pi pi-fw pi-pencil', to: '/pages/crud' },
-                { label: 'Calendar', icon: 'pi pi-fw pi-calendar-plus', to: '/pages/calendar' },
-                { label: 'Timeline', icon: 'pi pi-fw pi-calendar', to: '/pages/timeline' },
-                {
-                    label: 'Landing', icon: 'pi pi-fw pi-globe', badge: '2', badgeClassName: 'p-badge-warning',
-                    items: [
-                        { label: 'Static', icon: 'pi pi-fw pi-globe', url: 'assets/pages/landing.html', target: '_blank' },
-                        { label: 'Component', icon: 'pi pi-fw pi-globe', to: '/landing' }
-                    ]
-                }, { label: 'Login', icon: 'pi pi-fw pi-sign-in', to: '/login' },
-                { label: 'Invoice', icon: 'pi pi-fw pi-dollar', to: '/pages/invoice' },
-                { label: 'Help', icon: 'pi pi-fw pi-question-circle', to: '/pages/help' },
-                { label: 'Error', icon: 'pi pi-fw pi-times-circle', to: '/error' },
-                { label: 'Not Found', icon: 'pi pi-fw pi-exclamation-circle', to: '/notfound' },
-                { label: 'Access Denied', icon: 'pi pi-fw pi-lock', to: '/access' },
-                { label: 'Empty Page', icon: 'pi pi-fw pi-circle-off', to: '/pages/empty' }
-            ]
-        },
-        {
-            label: 'Hierarchy', icon: 'pi pi-fw pi-align-left',
-            items: [
-                {
-                    label: 'Submenu 1', icon: 'pi pi-fw pi-align-left',
-                    items: [
-                        {
-                            label: 'Submenu 1.1', icon: 'pi pi-fw pi-align-left',
-                            items: [
-                                { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-align-left' },
-                                { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-align-left' },
-                                { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-align-left' },
-                            ]
-                        },
-                        {
-                            label: 'Submenu 1.2', icon: 'pi pi-fw pi-align-left',
-                            items: [
-                                { label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-align-left' },
-                                { label: 'Submenu 1.2.2', icon: 'pi pi-fw pi-align-left' }
-                            ]
-                        },
-                    ]
-                },
-                {
-                    label: 'Submenu 2', icon: 'pi pi-fw pi-align-left',
-                    items: [
-                        {
-                            label: 'Submenu 2.1', icon: 'pi pi-fw pi-align-left',
-                            items: [
-                                { label: 'Submenu 2.1.1', icon: 'pi pi-fw pi-align-left' },
-                                { label: 'Submenu 2.1.2', icon: 'pi pi-fw pi-align-left' },
-                                { label: 'Submenu 2.1.3', icon: 'pi pi-fw pi-align-left' },
-                            ]
-                        },
-                        {
-                            label: 'Submenu 2.2', icon: 'pi pi-fw pi-align-left',
-                            items: [
-                                { label: 'Submenu 2.2.1', icon: 'pi pi-fw pi-align-left' },
-                                { label: 'Submenu 2.2.2', icon: 'pi pi-fw pi-align-left' }
-                            ]
-                        },
-                    ]
-                }
-            ]
-        },
-        {
-            label: 'Start', icon: 'pi pi-fw pi-download',
-            items: [
-                { label: 'Documentation', icon: 'pi pi-fw pi-question', to: '/start/documentation' },
-                { label: 'Buy Now', icon: 'pi pi-fw pi-shopping-cart', command: () => { window.location.href = "https://www.primefaces.org/store" } }
-            ]
-        }
-    ];
-    const routes = [
-        { parent: '', label: '' },
-        { parent: 'Favorites', label: 'Dashboard Analytics' },
-        { parent: 'UI Kit', label: 'Form Layout' },
-        { parent: 'UI Kit', label: 'Input' },
-        { parent: 'UI Kit', label: 'Float Label' },
-        { parent: 'UI Kit', label: 'Invalid State' },
-        { parent: 'UI Kit', label: 'Button' },
-        { parent: 'UI Kit', label: 'Table' },
-        { parent: 'UI Kit', label: 'List' },
-        { parent: 'UI Kit', label: 'Panel' },
-        { parent: 'UI Kit', label: 'Tree' },
-        { parent: 'UI Kit', label: 'Overlay' },
-        { parent: 'UI Kit', label: 'Menu' },
-        { parent: 'UI Kit', label: 'Message' },
-        { parent: 'UI Kit', label: 'File' },
-        { parent: 'UI Kit', label: 'Chart' },
-        { parent: 'UI Kit', label: 'Misc' },
-        { parent: 'Utilities', label: 'Display' },
-        { parent: 'Utilities', label: 'Elevation' },
-        { parent: 'Utilities', label: 'Flexbox' },
-        { parent: 'Utilities', label: 'Icons' },
-        { parent: 'Utilities', label: 'Widgets' },
-        { parent: 'Utilities', label: 'Grid' },
-        { parent: 'Utilities', label: 'Spacing' },
-        { parent: 'Utilities', label: 'Typography' },
-        { parent: 'Utilities', label: 'Text' },
-        { parent: 'Pages', label: 'Crud' },
-        { parent: 'Pages', label: 'Calendar' },
-        { parent: 'Pages', label: 'Timeline' },
-        { parent: 'Pages', label: 'Invoice' },
-        { parent: 'Pages', label: 'Login' },
-        { parent: 'Pages', label: 'Help' },
-        { parent: 'Pages', label: 'Empty' },
-        { parent: 'Pages', label: 'Access' },
-        { parent: 'Start', label: 'Documentation' }
-    ]
     useEffect(() => {
         if (menuMode === 'overlay') {
             hideOverlayMenu()
@@ -241,11 +88,13 @@ const App = () => {
     useEffect(() => {
         onColorModeChange(colorMode);
         (async () =>{
-            setMenu(menu1);
+
+            let dataRes = await httpClient.getMethod("file/download-text?filepath=%2Fvar%2Flib%2FApiGateway%2FConfigs%2FSystemConfig%2FFrontend%2Fmenudoc.json");
+
+            setMenu(JSON.parse(dataRes));
         })();
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Save theme config to localStorage whenever any theme state changes
     useEffect(() => {
         saveThemeConfig({
             menuMode,

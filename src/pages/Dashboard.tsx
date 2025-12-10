@@ -176,10 +176,7 @@ let ordersOptions = getOrdersOptions();
 export const Dashboard = (props: any) => {
     const [products, setProducts] = useState<any>(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const menu1 = useRef<any>(null);
     const menu2 = useRef<any>(null);
-    const menu3 = useRef<any>(null);
-    const menu4 = useRef<any>(null);
     const menu5 = useRef<any>(null);
     const menu6 = useRef<any>(null);
     const menu7 = useRef<any>(null);
@@ -674,7 +671,6 @@ export const Dashboard = (props: any) => {
     return (
         <>
             <div className="p-grid dashboard">
-                {renderFinanceSection()}
 
                 <div className="p-col-12 p-lg-3">
                     <div className="card height-100">
@@ -791,6 +787,9 @@ export const Dashboard = (props: any) => {
                         </div>
                     </div>
                 </div>
+                
+                {renderFinanceSection()}
+
                 <div className="p-col-12 p-lg-12">
                     {phongTro()}
                 </div>

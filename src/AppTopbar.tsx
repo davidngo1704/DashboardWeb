@@ -63,8 +63,6 @@ const AppTopbar = (props: any) => {
 
             var data = transformLinks(JSON.parse(dataRes));
 
-            console.log("data 2 ", data);
-
             setModel(data);
         })();
     }, []);
