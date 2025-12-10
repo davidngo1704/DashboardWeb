@@ -134,7 +134,8 @@ export const InputDemo = () => {
     };
 
     const [apiGatewayEndpoint, setApiGatewayEndpoint] = useState<string>('');
-    const [rootFolder, setRootFolder] = useState<string>('F:\\New\\var\\lib\\ApiGateway');
+    const [rootFolder, setRootFolder] = useState<string>('/var/lib/ApiGateway');
+    const [systemPrompt, setsystemPrompt] = useState<string>('');
 
     useEffect(() => {
         const countryService = new CountryService();
@@ -150,6 +151,11 @@ export const InputDemo = () => {
         if (savedRootFolder) {
             setRootFolder(savedRootFolder);
         }
+
+        const savedsystemPrompt = localStorage.getItem('systemPrompt');
+        if (savedsystemPrompt) {
+            setsystemPrompt(savedsystemPrompt);
+        }
     }, []);
 
     const cauHinhEndpoint: any = () => {
@@ -157,6 +163,7 @@ export const InputDemo = () => {
             if (apiGatewayEndpoint.trim()) {
                 localStorage.setItem('apiGatewayEndpoint', apiGatewayEndpoint);
                 localStorage.setItem('rootFolder', rootFolder);
+                localStorage.setItem('systemPrompt', systemPrompt);
                 alert('thành công!');
             } else {
                 alert('Vui lòng nhập endpoint API Gateway!');
@@ -181,6 +188,14 @@ export const InputDemo = () => {
                             placeholder="Nhập Root Folder" 
                             value={rootFolder}
                             onChange={(e) => setRootFolder(e.target.value)}
+                        />
+                    </div>
+                    <div className="p-col-12 p-mb-12 p-lg-12 p-mb-lg-12">
+                        <InputText 
+                            type="text"
+                            placeholder="Nhập System Prompt" 
+                            value={systemPrompt}
+                            onChange={(e) => setsystemPrompt(e.target.value)}
                         />
                     </div>
                 </div>
