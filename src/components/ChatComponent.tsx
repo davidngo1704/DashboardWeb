@@ -24,30 +24,37 @@ export default function ChatComponent() {
     const chatcontainer = useRef<any>(null);
 
     const addMessage = (message: string, isOwner: boolean) => {
-        let newChatMessages = [...chatMessages];
+        setChatMessages((prevMessages: any) => {
+            let newChatMessages = [...prevMessages];
 
-        if (isOwner) {
-            // Tin nhắn của user luôn tạo entry mới
-            newChatMessages.push({ messages: [message], from: null });
-            setChatMessages(newChatMessages);
-        }
-        else {
-                let lastMessage = newChatMessages[newChatMessages.length - 1];
-                console.log(newChatMessages);
-                // Nếu tin nhắn cuối cùng từ assistant, append vào
-                if (lastMessage.from) {
-                    lastMessage.messages.push(message);
-                    setChatMessages(newChatMessages);
-                }
-                // Nếu tin nhắn cuối cùng từ user, tạo entry mới
-                else {
+            if (isOwner) {
+                // Tin nhắn của user luôn tạo entry mới
+                newChatMessages.push({ messages: [message], from: null });
+            }
+            else {
+                if (newChatMessages.length === 0) {
+                    // Nếu chưa có tin nhắn nào, tạo mới
                     newChatMessages.push({ 
                         messages: [message],
                         from: 'Trợ lý', url: 'assets/demo/images/avatar/ionibowcher.png'
                     });
-                    setChatMessages(newChatMessages);
+                } else {
+                    let lastMessage = newChatMessages[newChatMessages.length - 1];
+                    // Nếu tin nhắn cuối cùng từ assistant, append vào
+                    if (lastMessage.from) {
+                        lastMessage.messages.push(message);
+                    }
+                    // Nếu tin nhắn cuối cùng từ user, tạo entry mới
+                    else {
+                        newChatMessages.push({ 
+                            messages: [message],
+                            from: 'Trợ lý', url: 'assets/demo/images/avatar/ionibowcher.png'
+                        });
+                    }
                 }
-        }
+            }
+            return newChatMessages;
+        });
     }
 
     const onChatKeydown = async (event: any) => {
