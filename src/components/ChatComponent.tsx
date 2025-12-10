@@ -12,7 +12,6 @@ export default function ChatComponent() {
         (async () => {
             try {
                 let data: any = [
-                    { from: 'Ioni Bowcher', url: 'assets/demo/images/avatar/ionibowcher.png', messages: ['Hey M. hope you are well.', 'Our idea is accepted by the board. Now it’s time to execute it'] },
                 ];
                 setChatMessages(data);
             } catch (error) {
