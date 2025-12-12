@@ -2,7 +2,7 @@ import axios from "axios";
 
 const getFullUrl = (url) => {
     const apiGatewayEndpoint = localStorage.getItem("apiGatewayEndpoint") || "";
-    if (!apiGatewayEndpoint) {
+    if (!apiGatewayEndpoint || url.startsWith("http://") || url.startsWith("https://")) {
         return url;
     }
 
@@ -10,7 +10,6 @@ const getFullUrl = (url) => {
 
     return `${apiGatewayEndpoint}${path}`;
 };
-
 async function uploadFile(url, filepath, filename, file) {
     const fullUrl = getFullUrl(url);
 
@@ -52,6 +51,14 @@ const httpClient = {
         const fullUrl = getFullUrl(url);
         const { status, data: { ok, data } } = await axios.get(fullUrl);
         if (status === 200 && ok) {
+            return data;
+        }
+        return null;
+    },
+    getRawMethod: async (url) => {
+        const fullUrl = getFullUrl(url);
+        const { status, data} = await axios.get(fullUrl);
+        if (status === 200) {
             return data;
         }
         return null;

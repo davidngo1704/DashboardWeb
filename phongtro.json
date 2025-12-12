@@ -1,0 +1,46 @@
+{
+  "age": 1,
+  "data": [
+    {
+      "code": "Phong1",
+      "electricityPrice": 3500,
+      "month": 12,
+      "year": 2025,
+      "price": 1200000,
+      "electricityNumber": 9316,
+      "name": "Giang",
+      "history": {
+        "electricityNumber1": 9193,
+        "electricityNumber": 9316
+      }
+    },
+    {
+      "code": "Phong2",
+      "electricityPrice": 3500,
+      "month": 12,
+      "year": 2025,
+      "price": 1200000,
+      "electricityNumber": 9933,
+      "name": "Hạnh",
+      "history": {
+        "electricityNumber1": 9787,
+        "electricityNumber": 9933
+      }
+    },
+    {
+      "code": "Phong3",
+      "electricityPrice": 3500,
+      "month": 12,
+      "year": 2025,
+      "price": 1000000,
+      "electricityNumber": 14599,
+      "name": "Vui",
+      "history": {
+        "electricityNumber1": 14502,
+        "electricityNumber": 14599
+      }
+    }
+  ],
+  "id": "89ce40e7-73e5-4f35-a3e4-22cf836e19ea",
+  "name": "QuanLyNhaTro"
+}

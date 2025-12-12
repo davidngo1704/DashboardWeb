@@ -5,9 +5,14 @@ import { ProgressBar } from 'primereact/progressbar';
 import { Chart } from 'primereact/chart';
 import { Button } from 'primereact/button';
 import ProductService from '../service/ProductService';
+import { RTLContext } from '../App';
+import { InputText } from 'primereact/inputtext';
+import httpClient from '../utils/htttpClient';
+import { Toast } from 'primereact/toast';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
-import { RTLContext } from '../App';
+import { Timeline } from 'primereact/timeline';
+import { Card } from 'primereact/card';
 
 const storeAData = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'],
@@ -331,11 +336,101 @@ let doughnutData: any;
 let doughnutOptions: any;
 let pieData: any;
 let pieOptions: any;
-
+const getOrdersOptions = () => {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text-color') || 'rgba(0, 0, 0, 0.87)';
+    const gridLinesColor = getComputedStyle(document.body).getPropertyValue('--divider-color') || 'rgba(160, 167, 181, .3)';
+    const fontFamily = getComputedStyle(document.body).getPropertyValue('--font-family');
+    return {
+        plugins: {
+            legend: {
+                display: true,
+                labels: {
+                    fontFamily,
+                    color: textColor,
+                }
+            }
+        },
+        scales: {
+            y: {
+                ticks: {
+                    fontFamily,
+                    color: textColor
+                },
+                grid: {
+                    color: gridLinesColor
+                }
+            },
+            x: {
+                ticks: {
+                    fontFamily,
+                    color: textColor
+                },
+                grid: {
+                    color: gridLinesColor
+                }
+            }
+        }
+    }
+}
 export const DashboardAnalytics = (props: any) => {
 
+let ordersOptions = getOrdersOptions();
+    const marker = (item: any) => {
+        return (
+            <span className="custom-marker p-shadow-2 p-p-2" style={{ backgroundColor: item.color }}>
+                <i className={classNames('marker-icon', item.icon)}></i>
+            </span>
+        );
+    };
+    const content = (item: any) => {
+        return (
+            <Card className="p-mb-3" title={item.status} subTitle={item.date}>
+                {item.image && <img src={`showcase/demo/images/product/${item.image}`} alt={item.name} width={200} className="p-shadow-2" />}
+                <p>{item.description}</p>
+            </Card>
+        );
+    };
+    const chart1 = useRef<any>(null);
+
+
+        const menu5 = useRef<any>(null);
+        const menu6 = useRef<any>(null);
+        const menu7 = useRef<any>(null);
+    
+        const menu9 = useRef<any>(null);
+    
+        const op = useRef<any>(null);
+
     const [products, setProducts] = useState<any>(null);
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+const ordersChart = {
+    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'],
+    datasets: [{
+        label: 'New Orders',
+        data: [31, 83, 69, 29, 62, 25, 59, 26, 46],
+        borderColor: [
+            '#4DD0E1',
+        ],
+        backgroundColor: [
+            'rgba(77, 208, 225, 0.8)',
+        ],
+        borderWidth: 2,
+        fill: true,
+        tension: .4
+    }, {
+        label: 'Completed Orders',
+        data: [67, 98, 27, 88, 38, 3, 22, 60, 56],
+        borderColor: [
+            '#3F51B5',
+        ],
+        backgroundColor: [
+            'rgba(63, 81, 181, 0.8)',
+        ],
+        borderWidth: 2,
+        fill: true,
+        tension: .4
+    }]
+};
     const isRTL = useContext(RTLContext)
     const bar = useRef<any>(null);
     const doughnut = useRef<any>(null);
@@ -380,10 +475,22 @@ export const DashboardAnalytics = (props: any) => {
     }
 
 
+
+   
+
+    useEffect(() => {
+        if (props.isNewThemeLoaded) {
+            ordersOptions = getOrdersOptions();
+            props.onNewThemeChange(false);
+        }
+    }, [props.isNewThemeLoaded, props.onNewThemeChange]); // eslint-disable-line react-hooks/exhaustive-deps
+    
+
     useEffect(() => {
         const productService = new ProductService();
+                productService.getProducts().then(data => setProducts(data));
+        
         productService.getProducts().then(data => setProducts(data));
-        console.log('DAINT HEHE', props.colorMode);
         chartMonthlyData = getChartData(props.colorMode);
         chartMonthlyOptions = getChartOptions();
         doughnutData = getDoughnutData(props.colorMode);
@@ -439,6 +546,7 @@ export const DashboardAnalytics = (props: any) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     };
 
+
     const actionTemplate = (rowData: any, column: any) => {
         return (
             <>
@@ -448,14 +556,7 @@ export const DashboardAnalytics = (props: any) => {
         )
     }
 
-    const priceBodyTemplate = (data: any) => {
-        return (
-            <>
-                <span className="p-column-title">Price</span>
-                {formatCurrency(data.price)}
-            </>
-        );
-    };
+
 
     const bodyTemplate = (data: any, props: any) => {
         return (
@@ -508,8 +609,300 @@ export const DashboardAnalytics = (props: any) => {
         pie.current.chart.update();
     }
 
+    const priceBodyTemplate = (data: any) => {
+        return (
+            <>
+                <span className="p-column-title">Price</span>
+                {formatCurrency(data.price)}
+            </>
+        );
+    };
+
+    // ---------------------- Quản lý phòng trọ ----------------------
+    type RoomApiData = {
+        code: string;
+        electricityPrice: number;
+        month: number;
+        year: number;
+        price: number;
+        electricityNumber: number;
+        name: string;
+        history: {
+            electricityNumber1: number;
+            electricityNumber: number;
+        }
+    };
+
+    const ELECTRICITY_API_URL = "https://rtafvndlc6mc6g5apdwzdjduma0sjicv.lambda-url.ap-southeast-2.on.aws/?id=89ce40e7-73e5-4f35-a3e4-22cf836e19ea";
+
+    const [roomData, setRoomData] = useState<RoomApiData[]>([]);
+
+    // số điện hiện tại nhập cho từng phòng
+    const [electricityInputs, setElectricityInputs] = useState<Record<string, string>>({
+        Phong1: '',
+        Phong2: '',
+        Phong3: ''
+    });
+
+    // nội dung text kết quả cho từng phòng
+    const [roomMessages, setRoomMessages] = useState<Record<string, string>>({});
+    const [isCalculating, setIsCalculating] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const formatVND = (value: number) =>
+        value.toLocaleString('vi-VN', { minimumFractionDigits: 0 });
+
+    const handleElectricityInputChange = (code: string, value: string) => {
+        setElectricityInputs(prev => ({
+            ...prev,
+            [code]: value
+        }));
+    };
+
+    const calculateBills = async () => {
+        try {
+            setIsCalculating(true);
+
+            let currentRoomData = roomData;
+
+            // Nếu chưa có dữ liệu phòng thì gọi API
+            if (!currentRoomData || currentRoomData.length === 0) {
+                const { data } = await httpClient.getRawMethod(ELECTRICITY_API_URL);
+                currentRoomData = data;
+                setRoomData(data);
+            }
+
+            const messages: Record<string, string> = {};
+
+            currentRoomData.forEach((room: RoomApiData) => {
+                const currentInput = electricityInputs[room.code];
+                if (!currentInput) {
+                    return;
+                }
+
+                const currentElectricityNumber = Number(currentInput);
+                if (isNaN(currentElectricityNumber)) {
+                    return;
+                }
+
+                const lastMonthElectricityNumber = room.electricityNumber;
+                const usedElectricity = Math.max(0, currentElectricityNumber - lastMonthElectricityNumber);
+                const electricityCost = usedElectricity * room.electricityPrice;
+                const total = electricityCost + room.price;
+
+                const message =
+                    `Phòng của ${room.name} (tháng ${room.month}) tổng tiền trọ hết ${formatVND(total)} đồng.\n` +
+                    `Trong đó:\n` +
+                    `- Tiền nhà là ${formatVND(room.price)} đồng.\n` +
+                    `- Tiền điện ${formatVND(electricityCost)} dùng ${usedElectricity} số điện (tháng này: ${currentElectricityNumber} số) (tháng trước chốt: ${lastMonthElectricityNumber} số).`;
+
+                messages[room.code] = message;
+            });
+
+            setRoomMessages(messages);
+        } finally {
+            setIsCalculating(false);
+        }
+    };
+    const toast = useRef<any>(null);
+    const saveData = async () => {
+        try {
+            setIsSaving(true);
+
+            let currentRoomData = roomData;
+
+            // Nếu chưa có dữ liệu phòng thì gọi API
+            if (!currentRoomData || currentRoomData.length === 0) {
+                const { data } = await httpClient.getRawMethod(ELECTRICITY_API_URL);
+                currentRoomData = data;
+                setRoomData(data);
+            }
+
+            // Kiểm tra xem đã nhập số điện cho tất cả các phòng chưa
+            const hasAllInputs = currentRoomData.every((room: RoomApiData) => {
+                const input = electricityInputs[room.code];
+                return input && !isNaN(Number(input));
+            });
+
+            if (!hasAllInputs) {
+                toast.current?.show({
+                    severity: 'warn',
+                    summary: 'Cảnh báo',
+                    detail: 'Vui lòng nhập số điện cho tất cả các phòng',
+                    life: 3000
+                });
+                return;
+            }
+
+            // Chuẩn bị dữ liệu để gửi lên API
+            const updatedData = currentRoomData.map((room: RoomApiData) => {
+                const currentInput = Number(electricityInputs[room.code]);
+
+                // Tính toán tháng và năm mới
+                let newMonth = room.month + 1;
+                let newYear = room.year;
+
+                if (newMonth > 12) {
+                    newMonth = 1;
+                    newYear = newYear + 1;
+                }
+
+                // Cập nhật lịch sử: đẩy electricityNumber hiện tại xuống electricityNumber1
+                // và giá trị mới vào electricityNumber
+                const newHistory = {
+                    electricityNumber1: room.history.electricityNumber,
+                    electricityNumber: currentInput
+                };
+
+                return {
+                    ...room,
+                    month: newMonth,
+                    year: newYear,
+                    electricityNumber: currentInput,
+                    history: newHistory
+                };
+            });
+
+            // Lấy dữ liệu đầy đủ từ API response để có age, id, name
+            const fullData = await httpClient.getRawMethod(ELECTRICITY_API_URL);
+
+            const requestBody = {
+                age: fullData.age || 1,
+                data: updatedData,
+                name: fullData.name || "QuanLyNhaTro"
+            };
+
+            // Gọi API PUT để lưu dữ liệu
+            await httpClient.putMethod(ELECTRICITY_API_URL, requestBody);
+
+            // Cập nhật state với dữ liệu mới
+            setRoomData(updatedData);
+
+            // Hiển thị thông báo thành công
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Thành công',
+                detail: 'Đã lưu dữ liệu số điện thành công',
+                life: 3000
+            });
+
+        } catch (error) {
+            console.error("Lỗi khi lưu dữ liệu:", error);
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Lỗi',
+                detail: 'Không thể lưu dữ liệu. Vui lòng thử lại',
+                life: 3000
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const phongTro: any = () => {
+        return (
+            <>
+                <h5>Quản lý phòng trọ</h5>
+                <div className="p-grid p-formgrid">
+                    <div className="p-col-12 p-mb-4 p-lg-4 p-mb-lg-4">
+                        <InputText
+                            type="number"
+                            placeholder="Số điện hiện tại phòng 1"
+                            value={electricityInputs.Phong1}
+                            onChange={(e) => handleElectricityInputChange('Phong1', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="p-col-12 p-mb-4 p-lg-4 p-mb-lg-4">
+                        <InputText
+                            type="number"
+                            placeholder="Số điện hiện tại phòng 2"
+                            value={electricityInputs.Phong2}
+                            onChange={(e) => handleElectricityInputChange('Phong2', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="p-col-12 p-mb-4 p-lg-4 p-mb-lg-4">
+                        <InputText
+                            type="number"
+                            placeholder="Số điện hiện tại phòng 3"
+                            value={electricityInputs.Phong3}
+                            onChange={(e) => handleElectricityInputChange('Phong3', e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="p-col-12">
+                    <div className="card">
+                        <Button
+                            label={"Khởi động"}
+                            className="p-mr-2 p-mb-2"
+                            onClick={() => {
+                                // tải sẵn dữ liệu phòng trọ để sau này tính tiền nhanh hơn
+                                (async () => {
+                                    try {
+                                        const { data } = await httpClient.getRawMethod(ELECTRICITY_API_URL);
+
+                                        console.log("Dữ liệu phòng trọ đã được tải:", data);
+
+                                        setRoomData(data);
+
+                                        toast.current?.show({
+                                            severity: 'success',
+                                            summary: 'Thành công',
+                                            detail: 'Khởi động thành công',
+                                            life: 3000
+                                        });
+                                    } catch (error) {
+                                        console.error("Không thể tải dữ liệu phòng trọ", error);
+                                    }
+                                })();
+                            }}
+                        />
+                        <Button
+                            label={isCalculating ? "Đang xử lý..." : "Tính toán"}
+                            className="p-mr-2 p-mb-2"
+                            onClick={calculateBills}
+                            disabled={isCalculating || isSaving}
+                        />
+                        <Button
+                            label={isSaving ? "Đang lưu..." : "Lưu lại"}
+                            className="p-mr-2 p-mb-2"
+                            onClick={saveData}
+                            disabled={isCalculating || isSaving}
+                        />
+                        <h4 style={{ whiteSpace: 'pre-line', userSelect: 'text', cursor: 'text' }}>
+                            {roomMessages.Phong1}
+                        </h4>
+                        <h4 style={{ whiteSpace: 'pre-line', userSelect: 'text', cursor: 'text' }}>
+                            {roomMessages.Phong2}
+                        </h4>
+                        <h4 style={{ whiteSpace: 'pre-line', userSelect: 'text', cursor: 'text' }}>
+                            {roomMessages.Phong3}
+                        </h4>
+                    </div>
+                </div>
+            </>
+        );
+    };
+
+const timelineEvents = [
+        { status: 'Ordered', date: '15/10/2020 10:30', icon: "pi pi-shopping-cart", color: '#E91E63', description: "Richard Jones (C8012) has ordered a blue t-shirt for $79." },
+        { status: 'Processing', date: '15/10/2020 14:00', icon: "pi pi-cog", color: '#FB8C00', description: "Order #99207 has processed succesfully." },
+        { status: 'Shipped', date: '15/10/2020 16:15', icon: "pi pi-compass", color: '#673AB7', description: "Order #99207 has shipped with shipping code 2222302090." },
+        { status: 'Delivered', date: '16/10/2020 10:00', icon: "pi pi-check-square", color: '#0097A7', description: "Richard Jones (C8012) has recieved his blue t-shirt." }
+    ];
+
     return (
         <div className="p-grid dashboard">
+
+
+            <div className="p-col-12 p-lg-12">
+                {phongTro()}
+            </div>
+
+
+
+
             <div className="p-col-12 p-md-8">
                 <div className="card height-100">
                     <div className="card-header">
@@ -646,7 +1039,7 @@ export const DashboardAnalytics = (props: any) => {
                             <span className="muted-text">Store A Sales</span>
                             <span className="fs-large p-mt-2">
                                 {storeADiff !== 0 && <i className={classNames('fw-700 fs-large pi', { 'p-pr-1': !isRTL, 'p-pl-1': isRTL, 'pi-arrow-up green-color': storeADiff > 0, 'pi-arrow-down pink-color': storeADiff < 0 })}></i>}
-                            ${storeATotalValue}
+                                ${storeATotalValue}
                                 {storeADiff !== 0 && <span className={classNames('fw-500 fs-normal', { 'p-ml-1': !isRTL, 'p-mr-1': isRTL, 'green-color': storeADiff > 0, 'pink-color': storeADiff < 0 })}>
                                     {storeADiff > 0 ? '+' : ''}{storeADiff}
                                 </span>}
@@ -661,7 +1054,7 @@ export const DashboardAnalytics = (props: any) => {
                             <span className="muted-text">Store B Sales</span>
                             <span className="fs-large p-mt-2">
                                 {storeBDiff !== 0 && <i className={classNames('fw-700 fs-large pi', { 'p-pr-1': !isRTL, 'p-pl-1': isRTL, 'pi-arrow-up green-color': storeBDiff > 0, 'pi-arrow-down pink-color': storeBDiff < 0 })}></i>}
-                            ${storeBTotalValue}
+                                ${storeBTotalValue}
                                 {storeBDiff !== 0 && <span className={classNames('fw-500 fs-normal', { 'p-ml-1': !isRTL, 'p-mr-1': isRTL, 'green-color': storeBDiff > 0, 'pink-color': storeBDiff < 0 })}>
                                     {storeBDiff > 0 ? '+' : ''}{storeBDiff}
                                 </span>}
@@ -676,7 +1069,7 @@ export const DashboardAnalytics = (props: any) => {
                             <span className="muted-text">Store C Sales</span>
                             <span className="fs-large p-mt-2">
                                 {storeCDiff !== 0 && <i className={classNames('fw-700 fs-large pi', { 'p-pr-1': !isRTL, 'p-pl-1': isRTL, 'pi-arrow-up green-color': storeCDiff > 0, 'pi-arrow-down pink-color': storeCDiff < 0 })}></i>}
-                            ${storeCTotalValue}
+                                ${storeCTotalValue}
                                 {storeCDiff !== 0 && <span className={classNames('fw-500 fs-normal', { 'p-ml-1': !isRTL, 'p-mr-1': isRTL, 'green-color': storeCDiff > 0, 'pink-color': storeCDiff < 0 })}>
                                     {storeCDiff > 0 ? '+' : ''}{storeCDiff}
                                 </span>}
@@ -691,7 +1084,7 @@ export const DashboardAnalytics = (props: any) => {
                             <span className="muted-text">Store D Sales</span>
                             <span className="fs-large p-mt-2">
                                 {storeDDiff !== 0 && <i className={classNames('fw-700 fs-large pi', { 'p-pr-1': !isRTL, 'p-pl-1': isRTL, 'pi-arrow-up green-color': storeDDiff > 0, 'pi-arrow-down pink-color': storeDDiff < 0 })}></i>}
-                            ${storeDTotalValue}
+                                ${storeDTotalValue}
                                 {storeDDiff !== 0 && <span className={classNames('fw-500 fs-normal', { 'p-ml-1': !isRTL, 'p-mr-1': isRTL, 'green-color': storeDDiff > 0, 'pink-color': storeDDiff < 0 })}>
                                     {storeDDiff > 0 ? '+' : ''}{storeDDiff}
                                 </span>}
@@ -764,7 +1157,7 @@ export const DashboardAnalytics = (props: any) => {
                     </div>
                     <div className="card-subheader p-mb-2 p-pb-3">
                         November 22 - November 29
-                </div>
+                    </div>
 
                     <div className="p-d-flex p-jc-between p-ai-center p-my-2 item">
                         <div className="p-d-flex p-flex-column">
@@ -836,6 +1229,181 @@ export const DashboardAnalytics = (props: any) => {
                     </div>
                 </div>
             </div>
+            <Toast ref={toast} />
+
+
+                  <div className="p-col-12 p-lg-6">
+                                <div className="card height-100">
+                                    <div className="card-header">
+                                        <h5>Contact</h5>
+                                        <div>
+                                            <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu5.current.toggle(event)}></Button>
+                                            <Menu ref={menu5} popup model={[{ label: 'New', icon: 'pi pi-fw pi-plus' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }, { label: 'Delete', icon: 'pi pi-fw pi-trash' }]}></Menu>
+                                        </div>
+                                    </div>
+            
+                                    <ul className="widget-list">
+                                        <li className="p-d-flex p-ai-center p-py-3">
+                                            <div className="person-item p-d-flex p-ai-center">
+                                                <img src="assets/demo/images/avatar/xuxuefeng.png" alt="" />
+                                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                                    <div>Xuxue Feng</div>
+                                                    <small className="muted-text">feng@ultima.org</small>
+                                                </div>
+                                            </div>
+                                            <span className={classNames('person-tag indigo-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Accounting</span>
+                                            <span className={classNames('person-tag orange-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Sales</span>
+                                        </li>
+            
+                                        <li className="p-d-flex p-ai-center p-py-3">
+                                            <div className="person-item p-d-flex p-ai-center">
+                                                <img src="assets/demo/images/avatar/elwinsharvill.png" alt="" />
+                                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                                    <div>Elwin Sharvill</div>
+                                                    <small className="muted-text">sharvill@ultima.org</small>
+                                                </div>
+                                            </div>
+                                            <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Finance</span>
+                                            <span className={classNames('person-tag orange-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Sales</span>
+                                        </li>
+            
+                                        <li className="p-d-flex p-ai-center p-py-3">
+                                            <div className="person-item p-d-flex p-ai-center">
+                                                <img src="assets/demo/images/avatar/avatar-1.png" alt="" />
+                                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                                    <div>Anna Fali</div>
+                                                    <small className="muted-text">fali@ultima.org</small>
+                                                </div>
+                                            </div>
+                                            <span className={classNames('person-tag pink-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Management</span>
+                                        </li>
+            
+                                        <li className="p-d-flex p-ai-center p-py-3">
+                                            <div className="person-item p-d-flex p-ai-center">
+                                                <img src="assets/demo/images/avatar/avatar-2.png" alt="" />
+                                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                                    <div>Jon Stone</div>
+                                                    <small className="muted-text">stone@ultima.org</small>
+                                                </div>
+                                            </div>
+                                            <span className={classNames('person-tag pink-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Management</span>
+                                            <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>Finance</span>
+                                        </li>
+            
+                                        <li className="p-d-flex p-ai-center p-py-3">
+                                            <div className="person-item p-d-flex p-ai-center">
+                                                <img src="assets/demo/images/avatar/avatar-3.png" alt="" />
+                                                <div className={classNames({ 'p-ml-2': !isRTL, 'p-mr-2': isRTL })}>
+                                                    <div>Stephen Shaw</div>
+                                                    <small className="muted-text">shaw@ultima.org</small>
+                                                </div>
+                                            </div>
+                                            <span className={classNames('person-tag teal-bgcolor p-p-1 fs-small', { 'p-ml-auto': !isRTL, 'p-mr-auto': isRTL })}>Finance</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+
+           <div className="p-col-12 p-lg-6">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Order Graph</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu6.current.toggle(event)}></Button>
+                                <Menu ref={menu6} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
+                        </div>
+                        <Chart type="line" data={ordersChart} options={ordersOptions}></Chart>
+                    </div>
+                </div>
+
+                <div className="p-col-12 p-lg-6">
+                    <div className="card height-100 widget-timeline">
+                        <div className="card-header">
+                            <h5>Timeline</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu7.current.toggle(event)}></Button>
+                                <Menu ref={menu7} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
+                        </div>
+
+                        <Timeline value={timelineEvents} align="left" className="customized-timeline" marker={marker} content={content} />
+                    </div>
+                </div>
+
+                <div className="p-col-12 p-md-12 p-lg-6">
+                    <div className="card height-100">
+                        <DataTable value={products} paginator rows={8} className="p-datatable-products"
+                            selection={selectedProduct} onSelectionChange={(e) => setSelectedProduct(e.value)}>
+                            <Column header="Image" body={imageTemplate} style={{ width: '5rem' }} />
+                            <Column field="name" body={bodyTemplate} header="Name" sortable />
+                            <Column field="category" body={bodyTemplate} header="Category" sortable />
+                            <Column field="price" body={priceBodyTemplate} header="Price" sortable />
+                            <Column header="View" body={actionTemplate} style={{ width: '4rem' }} />
+                        </DataTable>
+                    </div>
+                </div>
+
+
+                <div className="p-col-12 p-lg-3">
+                    <div className="card height-100">
+                        <div className="card-header">
+                            <h5>Activity</h5>
+                            <div>
+                                <Button type="button" icon="pi pi-ellipsis-h" className="p-button-rounded p-button-text p-button-plain" onClick={(event) => menu9.current.toggle(event)}></Button>
+                                <Menu ref={menu9} popup model={[{ label: 'Update', icon: 'pi pi-fw pi-refresh' }, { label: 'Edit', icon: 'pi pi-fw pi-pencil' }]}></Menu>
+                            </div>
+                        </div>
+
+                        <ul className="widget-activity">
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Income</div>
+                                    <div className="activity-subtext p-mb-2">30 November, 16.20</div>
+                                    <ProgressBar value="50" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Tax</div>
+                                    <div className="activity-subtext p-mb-2">1 December, 15.27</div>
+                                    <ProgressBar value="15" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Invoices</div>
+                                    <div className="activity-subtext p-mb-2">1 December, 15.28</div>
+                                    <ProgressBar value="78" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Expanses</div>
+                                    <div className="activity-subtext p-mb-2">3 December, 09.15</div>
+                                    <ProgressBar value="66" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Bonus</div>
+                                    <div className="activity-subtext p-mb-2">1 December, 23.55</div>
+                                    <ProgressBar value="85" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="activity-item p-d-flex p-flex-column">
+                                    <div className="activity-title p-mb-1">Revenue</div>
+                                    <div className="activity-subtext p-mb-2">30 November, 16.20</div>
+                                    <ProgressBar value="54" showValue={false}></ProgressBar>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+
         </div>
 
     )
