@@ -103,7 +103,14 @@ export const Dashboard = (props: any) => {
             saveTodayPrices(latestPricesMap);
         }
 
+        // Fetch prices immediately on component mount
         fetchAndSyncPrices();
+
+        // Set up interval to fetch prices every 30 seconds
+        const interval = setInterval(fetchAndSyncPrices, 30000);
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const storeD = useRef<any>(null);
