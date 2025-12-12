@@ -36,7 +36,7 @@ export const Dashboard = (props: any) => {
         }, {});
     }
 
-    const readYesterdayPrices = () => {
+    const readStoredPrices = () => {
         try {
             const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (!raw) return null;
@@ -44,14 +44,10 @@ export const Dashboard = (props: any) => {
             const parsed = JSON.parse(raw);
             if (!parsed?.date || !parsed?.prices) return null;
 
-            const yesterday = new Date();
-            yesterday.setHours(0, 0, 0, 0);
-            yesterday.setDate(yesterday.getDate() - 1);
-
             const storedDate = new Date(parsed.date);
             storedDate.setHours(0, 0, 0, 0);
 
-            return getDateKey(storedDate) === getDateKey(yesterday) ? parsed.prices : null;
+            return { dateKey: getDateKey(storedDate), prices: parsed.prices };
         } catch (error) {
             console.error('Failed to read price history from localStorage', error);
             return null;
@@ -61,8 +57,21 @@ export const Dashboard = (props: any) => {
     const saveTodayPrices = (pricesMap: Record<string, number>) => {
         try {
             const today = new Date();
+            const todayKey = getDateKey(today);
+            
+            // Check if today's data already exists
+            const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed?.date === todayKey) {
+                    // Today's data already exists, don't overwrite
+                    return;
+                }
+            }
+            
+            // Save only if today's data doesn't exist or it's a new day
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-                date: getDateKey(today),
+                date: todayKey,
                 prices: pricesMap
             }));
         } catch (error) {
@@ -85,12 +94,12 @@ export const Dashboard = (props: any) => {
 
     useEffect(() => {
         const fetchAndSyncPrices = async () => {
-            const yesterdayPrices = readYesterdayPrices();
+            const stored = readStoredPrices();
             const latestPrices = await fetchPrices(symbols);
             setPrices(latestPrices);
 
             const latestPricesMap = mapPricesToRecord(latestPrices);
-            setPriceDiffs(calculateDiffs(latestPricesMap, yesterdayPrices));
+            setPriceDiffs(calculateDiffs(latestPricesMap, stored?.prices ?? null));
             saveTodayPrices(latestPricesMap);
         }
 
