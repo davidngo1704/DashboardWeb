@@ -65,9 +65,7 @@ export default function ChatComponent() {
 
             (async () => {
                 try {
-                    const systemPrompt = localStorage.getItem('systemPrompt');
-
-                    let reply = await httpClient.postMethod('/fast-api/common', { systemPrompt: systemPrompt, message: message });
+                    let reply = await httpClient.postMethod('/fast-api/chat', { message: message });
 
                     setTimeout(() => {
                         addMessage(reply, false);
